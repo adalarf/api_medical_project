@@ -10,3 +10,4 @@
   <li>Создать миграции `python manage.py makemigrations` и `python manage.py migrate`</li>
   <li>Запустить сервер командой `python manage.py runserver`</li>
 </ol>
+<b>Документация: '/swagger/'</b>
