@@ -30,7 +30,6 @@ class CustomManager(BaseUserManager):
 
 
 class Doctor(AbstractBaseUser):
-    id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     patronymic = models.CharField(max_length=255)
