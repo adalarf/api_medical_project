@@ -56,7 +56,6 @@ class Doctor(AbstractBaseUser):
 
 
 class Patient(models.Model):
-    id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     patronymic = models.CharField(max_length=255)
@@ -70,7 +69,6 @@ class Patient(models.Model):
 
 
 class PatientTests(models.Model):
-    id = models.IntegerField(primary_key=True)
     analysis_date = models.DateField()
     test_id = models.ForeignKey('Test', on_delete=models.PROTECT)
     created_at = models.DateTimeField()
@@ -79,20 +77,26 @@ class PatientTests(models.Model):
 
 
 class Test(models.Model):
-    id = models.IntegerField(primary_key=True)
     analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
 
 
 class Analysis(models.Model):
-    id = models.IntegerField(primary_key=True)
     value = models.FloatField()
     indicator_id = models.ForeignKey('Indicator', on_delete=models.PROTECT)
 
 
 class Indicator(models.Model):
-    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=255)
     interval_min = models.FloatField()
     interval_max = models.FloatField()
     unit = models.CharField(max_length=255)
+
+
+class SubjectInfo(models.Model):
+    subject_name = models.CharField(max_length=255, unique=True)
+    subject_text = models.TextField()
+
+
+class CopyrightInfo(models.Model):
+    copyright_text = models.TextField()
