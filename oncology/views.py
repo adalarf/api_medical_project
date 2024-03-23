@@ -16,7 +16,7 @@ class DoctorSignupView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            user = Doctor.objects.get(login=request.data['login'])
+            user = Doctor.objects.get(email=request.data['email'])
             user.set_password(request.data['password'])
             user.is_active = True
             user.save()
@@ -25,7 +25,7 @@ class DoctorSignupView(GenericAPIView):
                 'token': token.key,
                 'user': user.id,
             })
-        return Response({})
+        return Response(serializer.errors)
 
 
 class DoctorLoginView(GenericAPIView):
@@ -33,11 +33,11 @@ class DoctorLoginView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            login = serializer.validated_data.get('login')
+            email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
 
             try:
-                user = Doctor.objects.get(login=login)
+                user = Doctor.objects.get(email=email)
             except Doctor.DoesNotExist:
                 return Response({'error': 'Неверный логин или пароль'})
 
@@ -45,7 +45,7 @@ class DoctorLoginView(GenericAPIView):
                 return Response({'error': 'Неверный логин или пароль'})
 
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'user': user.login})
+            return Response({'token': token.key, 'user': user.email})
 
         return Response(serializer.errors)
 

@@ -5,21 +5,21 @@ from .models import Doctor, SubjectInfo, CopyrightInfo
 class DoctorSignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('first_name', 'last_name', 'patronymic', 'password', 'login', 'email')
+        fields = ('first_name', 'last_name', 'patronymic', 'password', 'email')
 
 
 class DoctorLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('login', 'password')
+        fields = ('email', 'password')
         extra_kwargs = {
-            'login': {'validators': []}}
+            'email': {'validators': []}}
 
 
 class BaseDoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('first_name', 'last_name', 'patronymic', 'login', 'email')
+        fields = ('first_name', 'last_name', 'patronymic', 'email')
 
 
 class SubjectInfoSerializer(serializers.ModelSerializer):

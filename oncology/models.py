@@ -3,12 +3,11 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 
 class CustomManager(BaseUserManager):
-    def create_user(self, first_name,  last_name, patronymic, password, login, email, **extra_fields):
+    def create_user(self, first_name,  last_name, patronymic, password, email, **extra_fields):
         doctor = self.model(
             first_name=first_name,
             last_name=last_name,
             patronymic=patronymic,
-            login=login,
             email=self.normalize_email(email),
             **extra_fields
         )
@@ -16,7 +15,7 @@ class CustomManager(BaseUserManager):
         doctor.save(using=self._db)
         return doctor
 
-    def create_superuser(self, first_name,  last_name, patronymic, password, login, email, **extra_fields):
+    def create_superuser(self, first_name,  last_name, patronymic, password, email, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -26,7 +25,7 @@ class CustomManager(BaseUserManager):
 
         if not extra_fields.get('is_superuser'):
             raise ValueError("Superuser must have is_superuser = True")
-        return self.create_user(first_name,  last_name, patronymic, password, login, email, **extra_fields)
+        return self.create_user(first_name,  last_name, patronymic, password, email, **extra_fields)
 
 
 class Doctor(AbstractBaseUser):
@@ -34,7 +33,6 @@ class Doctor(AbstractBaseUser):
     last_name = models.CharField(max_length=255)
     patronymic = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
-    login = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -43,10 +41,10 @@ class Doctor(AbstractBaseUser):
     objects = CustomManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'patronymic', 'login']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'patronymic']
 
     def __str__(self):
-        return self.login
+        return self.email
 
     def has_module_perms(self, app_label):
         return True
