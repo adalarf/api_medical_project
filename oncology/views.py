@@ -99,7 +99,7 @@ class SubjectInfoView(RetrieveUpdateDestroyAPIView):
     lookup_field = 'subject_name'
 
 
-class CopyrightInfoView(RetrieveAPIView):
+class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
     """
     Эндпоинт для вывода/редактирования/удаления Авторских прав
     copyright_text - описание Авторских прав
@@ -110,5 +110,13 @@ class CopyrightInfoView(RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = CopyrightInfo.objects.get(pk=kwargs['pk'])
         serializer = self.get_serializer(instance)
+
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         return Response(serializer.data)
