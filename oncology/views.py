@@ -1,13 +1,13 @@
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from .serializers import DoctorSignupSerializer, BaseDoctorSerializer, DoctorLoginSerializer
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from .models import Doctor, SubjectInfo, CopyrightInfo
-from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer
+from .models import Doctor, SubjectInfo, CopyrightInfo, Patient
+from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer
 
 
 class DoctorSignupView(GenericAPIView):
@@ -99,6 +99,14 @@ class SubjectInfoView(RetrieveUpdateDestroyAPIView):
     lookup_field = 'subject_name'
 
 
+class SubjectListView(ListAPIView):
+    """
+    Эндпоинт для вывода имен областей применения
+    """
+    queryset = SubjectInfo.objects.all()
+    serializer_class = SubjectListSerializer
+
+
 class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
     """
     Эндпоинт для вывода/редактирования/удаления Авторских прав
@@ -120,3 +128,15 @@ class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
 
         return Response(serializer.data)
+
+
+class PatientCreationView(CreateAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class PatientEditView(RetrieveUpdateDestroyAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
+    permission_classes = [IsAuthenticated]

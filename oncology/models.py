@@ -58,12 +58,12 @@ class Patient(models.Model):
     last_name = models.CharField(max_length=255)
     patronymic = models.CharField(max_length=255)
     birth_date = models.DateField()
-    diagnosis = models.CharField()
-    region = models.CharField()
+    diagnosis = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
     diagnosis_comment = models.TextField(null=True, blank=True)
     operation_comment = models.TextField(null=True, blank=True)
     chemoterapy_comment = models.TextField(null=True, blank=True)
-    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
+    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT, null=True, blank=True)
 
 
 class PatientTests(models.Model):

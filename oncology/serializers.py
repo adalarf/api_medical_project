@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Doctor, SubjectInfo, CopyrightInfo
+from .models import Doctor, SubjectInfo, CopyrightInfo, Patient
 
 
 class DoctorSignupSerializer(serializers.ModelSerializer):
@@ -28,7 +28,19 @@ class SubjectInfoSerializer(serializers.ModelSerializer):
         fields = ('subject_name', 'subject_text')
 
 
+class SubjectListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectInfo
+        fields = ('subject_name', )
+
+
 class CopyrightInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CopyrightInfo
         fields = ('copyright_text',)
+
+
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        exclude = ('patient_test_id',)
