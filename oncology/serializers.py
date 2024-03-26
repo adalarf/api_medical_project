@@ -32,7 +32,7 @@ class SubjectInfoSerializer(serializers.ModelSerializer):
 class SubjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubjectInfo
-        fields = ('subject_name', )
+        fields = ('id', 'subject_name', )
 
 
 class CopyrightInfoSerializer(serializers.ModelSerializer):
