@@ -9,6 +9,9 @@ from rest_framework.authtoken.models import Token
 from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer, PatientTestsSerializer, IndicatorSerializer, TestSerializer
 from datetime import datetime
+from rest_framework.exceptions import NotFound
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class DoctorSignupView(GenericAPIView):
@@ -97,7 +100,6 @@ class SubjectInfoView(RetrieveUpdateDestroyAPIView):
     """
     queryset = SubjectInfo.objects.all()
     serializer_class = SubjectInfoSerializer
-    lookup_field = 'subject_name'
 
 
 class SubjectListView(ListAPIView):
@@ -132,12 +134,18 @@ class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
 
 
 class PatientCreationView(CreateAPIView):
+    """
+    Создание пациента
+    """
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
 
 
 class PatientEditView(RetrieveUpdateDestroyAPIView):
+    """
+    Редактирование данных о пациенте
+    """
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
@@ -147,28 +155,38 @@ class IndicatorView(CreateAPIView):
     queryset = Indicator.objects.all()
     serializer_class = IndicatorSerializer
 
-class TestSerializerView(CreateAPIView):
-    queryset = Test.objects.all()
-    serializer_class = TestSerializer
-    permission_classes = [IsAuthenticated]
 
-
-
-class PatientTestsView(CreateAPIView):
-    queryset = PatientTests.objects.all()
-    serializer_class = PatientTestsSerializer
-
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-
-
-class PatientTestsView1(APIView):
+class PatientTestsView(APIView):
+    """
+    Эндпоинт для создания тестов пациента
+    """
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['analysis_date', 'test', 'patient_id'],
+        properties={
+            'analysis_date': openapi.Schema(type=openapi.TYPE_STRING),
+            'test': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                        'analysis': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'value': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'indicator_name': openapi.Schema(type=openapi.TYPE_STRING)
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            'patient_id': openapi.Schema(type=openapi.TYPE_INTEGER)
+        }
+    ))
     def post(self, request):
         analysis_date = request.data['analysis_date']
         doctor_id = request.user
@@ -177,7 +195,10 @@ class PatientTestsView1(APIView):
         updated_at = current_time
         tests = request.data['test']
         patient = request.data['patient_id']
-        patient_id = Patient.objects.get(id=patient)
+        try:
+            patient_id = Patient.objects.get(id=patient)
+        except Patient.DoesNotExist:
+            raise NotFound('Пациент не найден')
         patient_test = PatientTests.objects.create(doctor_id=doctor_id, created_at=created_at, updated_at=updated_at, analysis_date=analysis_date, patient_id=patient_id)
         for i in tests:
             name = i['name']
@@ -186,7 +207,10 @@ class PatientTestsView1(APIView):
             for j in analysises:
                 value = j['value']
                 indicator_name = j['indicator_name']
-                indicator = Indicator.objects.get(name=indicator_name)
+                try:
+                    indicator = Indicator.objects.get(name=indicator_name)
+                except Indicator.DoesNotExist:
+                    raise NotFound('Indicator не существует')
                 analysis = Analysis.objects.create(value=value, indicator_id=indicator, test_id=test)
 
 
@@ -195,15 +219,62 @@ class PatientTestsView1(APIView):
 
 
 class PatientTestsEditView(APIView):
+    """
+    Эндпоинт для редактирования тестов пациента
+    """
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['analysis_date', 'test'],
+        properties={
+            'analysis_date': openapi.Schema(type=openapi.TYPE_STRING),
+            'test': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'name': openapi.Schema(type=openapi.TYPE_STRING),
+                        'analysis': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'value': openapi.Schema(type=openapi.TYPE_STRING),
+                                    'indicator_name': openapi.Schema(type=openapi.TYPE_STRING)
+                                }
+                            )
+                        )
+                    }
+                )
+            )
+        }
+    ))
     def put(self, request, pk):
         analysis_date = request.data['analysis_date']
         doctor_id = request.user
         current_time = datetime.now()
         updated_at = current_time
-        value = request.data['value']
+        tests = request.data['test']
+        try:
+            patient_test = PatientTests.objects.get(id=pk, doctor_id=doctor_id)
+        except PatientTests.DoesNotExist:
+            raise NotFound('Patient Test не существует')
+        PatientTests.objects.filter(id=pk, doctor_id=doctor_id).update(updated_at=updated_at,
+                                                                       analysis_date=analysis_date)
 
-        patient_test = pk
+        for i in tests:
+            name = i['name']
+            analyses = i['analysis']
+            try:
+                test = Test.objects.get(name=name, patient_test_id=patient_test)
+            except Test.DoesNotExist:
+                raise NotFound('Test не существует')
+            for j in analyses:
+                value = j['value']
+                indicator_name = j['indicator_name']
+                try:
+                    indicator = Indicator.objects.get(name=indicator_name)
+                except Indicator.DoesNotExist:
+                    raise NotFound('Indicator не существует')
+                Analysis.objects.filter(indicator_id=indicator, test_id=test).update(value=value)
 
-
-
-        return Response('анализ создан')
+        return Response('анализ изменён')

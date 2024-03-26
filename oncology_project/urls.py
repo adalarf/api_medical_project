@@ -27,19 +27,16 @@ urlpatterns = [
     path('api/v1/profile/', views.DoctorProfileView.as_view()),
 
     path('api/v1/add-subject-info/', views.SubjectInfoPostView.as_view()),
-    path('api/v1/subject-info/<str:subject_name>/', views.SubjectInfoView.as_view()),
+    path('api/v1/subject-info/<int:pk>/', views.SubjectInfoView.as_view()),
     path('api/v1/subject-info/', views.SubjectListView.as_view()),
     path('api/v1/copyright-info/', views.CopyrightInfoView.as_view(), kwargs={'pk': 1}),
 
     path('api/v1/create-patient/', views.PatientCreationView.as_view()),
     path('api/v1/edit-patient/<int:pk>/', views.PatientEditView.as_view()),
 
-    path('api/v1/patient-test/', views.PatientTestsView.as_view()),
     path('api/v1/indicator/', views.IndicatorView.as_view()),
 
-    path('api/v1/test/', views.TestSerializerView.as_view()),
-
-    path('api/v1/patient-test-test/', views.PatientTestsView1.as_view()),
+    path('api/v1/patient-test/', views.PatientTestsView.as_view()),
 
     path('api/v1/patient-test-edit/<int:pk>/', views.PatientTestsEditView.as_view()),
 ]
