@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 from .serializers import DoctorSignupSerializer, BaseDoctorSerializer, DoctorLoginSerializer
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from .models import Doctor, SubjectInfo, CopyrightInfo, Patient
-from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer
+from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests
+from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer, PatientTestsSerializer, IndicatorSerializer, TestSerializer
+from datetime import datetime
 
 
 class DoctorSignupView(GenericAPIView):
@@ -140,3 +141,69 @@ class PatientEditView(RetrieveUpdateDestroyAPIView):
     queryset = Patient.objects.all()
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
+
+
+class IndicatorView(CreateAPIView):
+    queryset = Indicator.objects.all()
+    serializer_class = IndicatorSerializer
+
+class TestSerializerView(CreateAPIView):
+    queryset = Test.objects.all()
+    serializer_class = TestSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
+class PatientTestsView(CreateAPIView):
+    queryset = PatientTests.objects.all()
+    serializer_class = PatientTestsSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+
+class PatientTestsView1(APIView):
+    def post(self, request):
+        analysis_date = request.data['analysis_date']
+        doctor_id = request.user
+        current_time = datetime.now()
+        created_at = current_time
+        updated_at = current_time
+        tests = request.data['test']
+        patient = request.data['patient_id']
+        patient_id = Patient.objects.get(id=patient)
+        patient_test = PatientTests.objects.create(doctor_id=doctor_id, created_at=created_at, updated_at=updated_at, analysis_date=analysis_date, patient_id=patient_id)
+        for i in tests:
+            name = i['name']
+            analysises = i['analysis']
+            test = Test.objects.create(name=name, patient_test_id=patient_test)
+            for j in analysises:
+                value = j['value']
+                indicator_name = j['indicator_name']
+                indicator = Indicator.objects.get(name=indicator_name)
+                analysis = Analysis.objects.create(value=value, indicator_id=indicator, test_id=test)
+
+
+
+        return Response('анализ создан')
+
+
+class PatientTestsEditView(APIView):
+    def put(self, request, pk):
+        analysis_date = request.data['analysis_date']
+        doctor_id = request.user
+        current_time = datetime.now()
+        updated_at = current_time
+        value = request.data['value']
+
+        patient_test = pk
+
+
+
+        return Response('анализ создан')

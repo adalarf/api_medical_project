@@ -63,25 +63,28 @@ class Patient(models.Model):
     diagnosis_comment = models.TextField(null=True, blank=True)
     operation_comment = models.TextField(null=True, blank=True)
     chemoterapy_comment = models.TextField(null=True, blank=True)
-    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT, null=True, blank=True)
+    # patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT, null=True, blank=True)
 
 
 class PatientTests(models.Model):
     analysis_date = models.DateField()
-    test_id = models.ForeignKey('Test', on_delete=models.PROTECT)
+    # test_id = models.ForeignKey('Test', on_delete=models.PROTECT, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     doctor_id = models.ForeignKey(Doctor, on_delete=models.PROTECT)
+    patient_id = models.ForeignKey(Patient, on_delete=models.PROTECT)
 
 
 class Test(models.Model):
-    analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
+    # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT, null=True)
     name = models.CharField(max_length=255)
+    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
 
 
 class Analysis(models.Model):
     value = models.FloatField()
     indicator_id = models.ForeignKey('Indicator', on_delete=models.PROTECT)
+    test_id = models.ForeignKey('Test', on_delete=models.PROTECT)
 
 
 class Indicator(models.Model):
@@ -89,6 +92,7 @@ class Indicator(models.Model):
     interval_min = models.FloatField()
     interval_max = models.FloatField()
     unit = models.CharField(max_length=255)
+    # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
 
 
 class SubjectInfo(models.Model):
