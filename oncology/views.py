@@ -6,12 +6,14 @@ from rest_framework.views import APIView
 from .serializers import DoctorSignupSerializer, BaseDoctorSerializer, DoctorLoginSerializer
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests
-from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer, PatientTestsSerializer, IndicatorSerializer, TestSerializer
+from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests, Graphic
+from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
+    PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from .utils import draw_hematological_research
 
 
 class DoctorSignupView(GenericAPIView):
@@ -151,6 +153,11 @@ class PatientEditView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class PatientInfoView(ListAPIView):
+    queryset = Patient.objects.all()
+    serializer_class = PatientInfoSerializer
+
+
 class IndicatorView(CreateAPIView):
     queryset = Indicator.objects.all()
     serializer_class = IndicatorSerializer
@@ -213,9 +220,25 @@ class PatientTestsView(APIView):
                     raise NotFound('Indicator не существует')
                 analysis = Analysis.objects.create(value=value, indicator_id=indicator, test_id=test)
 
+        hematological_research_tests = Test.objects.filter(patient_test_id=patient_test,
+                                                           name='hematological_research').first()
+        immune_status_tests = Test.objects.filter(patient_test_id=patient_test,
+                                                           name='immune_status').first()
+        if hematological_research_tests is not None and immune_status_tests is not None:
+            lymf_indicator = Indicator.objects.get(name='lymphocytes')
+            cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
+            neu_indicator = Indicator.objects.get(name='neutrophils')
+            cd4_indicator = Indicator.objects.get(name='t_helpers')
+            cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+            lymf = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=lymf_indicator).value
+            neu = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=neu_indicator).value
+            cd19 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd19_indicator).value
+            cd4 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd4_indicator).value
+            cd8 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd8_indicator).value
+            draw_hematological_research([cd19/cd4, lymf/cd19, neu/lymf, cd19/cd8], patient_test)
 
 
-        return Response('анализ создан')
+        return Response(f'Анализ с id {patient_test.id} создан')
 
 
 class PatientTestsEditView(APIView):
@@ -277,4 +300,20 @@ class PatientTestsEditView(APIView):
                     raise NotFound('Indicator не существует')
                 Analysis.objects.filter(indicator_id=indicator, test_id=test).update(value=value)
 
-        return Response('анализ изменён')
+        return Response('Анализ изменён')
+
+
+class GraphicCreateView(APIView):
+    def post(self, request):
+        data = request.data.get('values')
+        draw_hematological_research(data)
+
+        return Response('image created')
+
+
+class GraphicView(APIView):
+    def get(self, request, pk):
+        graphic = Graphic.objects.get(id=pk)
+        serializer = GraphicSerializer(graphic)
+        data = serializer.data
+        return Response(data)

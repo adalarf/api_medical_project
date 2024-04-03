@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, PatientTests, Test, Analysis, Indicator
+from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, PatientTests, Test, Analysis, Indicator, Graphic
 from datetime import datetime
 
 
@@ -44,13 +44,23 @@ class CopyrightInfoSerializer(serializers.ModelSerializer):
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        exclude = ('id', )
+        # exclude = ('id', )
+        fields = '__all__'
+
+
+class PatientInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ('id', 'first_name', 'last_name', 'patronymic', 'birth_date',)
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         exclude = ('id',)
+
+    def create(self, validated_data):
+        return Indicator.objects.create(**validated_data)
 
 class IndicatorNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -118,3 +128,9 @@ class PatientTestsSerializer(serializers.ModelSerializer):
 #             patient_test.test_id.add(test)
 
 #         return patient_test
+
+
+class GraphicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Graphic
+        fields = ('graphic',)

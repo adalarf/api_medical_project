@@ -89,9 +89,9 @@ class Analysis(models.Model):
 
 class Indicator(models.Model):
     name = models.CharField(max_length=255)
-    interval_min = models.FloatField()
-    interval_max = models.FloatField()
-    unit = models.CharField(max_length=255)
+    interval_min = models.FloatField(blank=True, null=True)
+    interval_max = models.FloatField(blank=True, null=True)
+    unit = models.CharField(max_length=255, blank=True, null=True)
     # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
 
 
@@ -102,3 +102,8 @@ class SubjectInfo(models.Model):
 
 class CopyrightInfo(models.Model):
     copyright_text = models.TextField()
+
+
+class Graphic(models.Model):
+    graphic = models.ImageField(upload_to='media')
+    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
