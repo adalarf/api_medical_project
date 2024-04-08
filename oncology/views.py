@@ -235,8 +235,7 @@ class PatientTestsView(APIView):
             cd19 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd19_indicator).value
             cd4 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd4_indicator).value
             cd8 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd8_indicator).value
-            draw_hematological_research([cd19/cd4, lymf/cd19, neu/lymf, cd19/cd8], patient_test)
-
+            draw_hematological_research([(cd19 / cd4) / 0.2, (lymf / cd19) / 2, (neu / lymf) / 0.4, (cd19 / cd8) / 0.2], patient_test)
 
         return Response(f'Анализ с id {patient_test.id} создан')
 
