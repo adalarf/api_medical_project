@@ -226,17 +226,18 @@ def draw_cytokine_status(values, patient_test):
 
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw={'polar': True})
 
-    # angles = [(angle - (angle / 3)) % (2 * np.pi) for angle in angles]
-    # min_angles = [(angle - (angle / 3)) % (2 * np.pi) for angle in min_angles]
-    # max_angles = [(angle - (angle / 3)) % (2 * np.pi) for angle in max_angles]
+    angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in angles]
+    min_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in min_angles]
+    max_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in max_angles]
 
     ax.plot(angles, values, color='red', linewidth=2)
     ax.plot(min_angles, min_indicator_values, linestyle='--', color='green', linewidth=2)
     ax.plot(max_angles, max_indicator_values, linestyle='--', color='green', linewidth=2)
 
-    draw_scaled_marks([0.04, 1.3, '24.0'], [0.02, 2.3, '48.0'], [0.015, 3.3, '72.0'], [0.01, 4.3, '96.0'],
-                      [-1.75, 0.95, '24.0'], [-1.9, 1.95, '48.0'], [-1.96, 2.95, '72.0'], [-1.97, 3.95, '96.0'],
-                      [-4.5, 1.0, '24.0'], [-4.35, 2.0, '48.0'], [-4.3, 3.0, '72.0'], [-4.25, 4.0, '96.0'])
+    draw_scaled_marks([-0.47, 1.3, '24.0'], [-0.478, 2.3, '48.0'], [-0.489, 3.3, '72.0'], [-0.502, 4.3, '96.0'],
+                      [-2.3, 0.95, '24.0'], [-2.465, 1.95, '48.0'], [-2.51, 2.95, '72.0'], [-2.54, 3.95, '96.0'],
+                      # [-5.06, 1.1, '24.0'], [-4.35, 2.1, '48.0'], [-4.3, 3.1, '72.0'], [-4.25, 4.1, '96.0'])
+                      [1.3, 1.05, '24.0'], [1.428, 2.05, '48.0'], [1.467, 3.05, '72.0'], [1.488, 4.05, '96.0'])
 
     draw_values(angles, values, values_not_scaled, ax)
 
@@ -254,7 +255,7 @@ def draw_cytokine_status(values, patient_test):
     draw_values(min_angles, min_indicator_values, min_values_not_scaled, ax)
     draw_values(max_angles, max_indicator_values, max_values_not_scaled, ax)
 
-    #ax.set_theta_offset(np.pi * 16)
+    # ax.set_theta_offset(np.pi * 20)
 
     ax.set_yticklabels([])
     ax.set_xticks(angles[:-1])
