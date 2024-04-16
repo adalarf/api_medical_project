@@ -14,6 +14,7 @@ from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status
+from django.http import JsonResponse
 
 
 class DoctorSignupView(GenericAPIView):
@@ -161,6 +162,48 @@ class PatientInfoView(ListAPIView):
 class IndicatorView(CreateAPIView):
     queryset = Indicator.objects.all()
     serializer_class = IndicatorSerializer
+
+
+class TestsPatientView(APIView):
+    """
+    Эндпоинт для вывода информации об анализах пациента, где id - id пациента, вывод в виде:
+        {
+        "patient_tests": [
+            {
+                "analysis_date": "2024-03-24",
+                "tests":[
+                   {
+                       "name": "hematological_research"
+                   },
+                   {
+                        "name": "immune_status"
+                   }
+                ]
+            }
+       ]
+    }
+    """
+    def get(self, request, pk):
+        data = {}
+        patient = Patient.objects.get(pk=pk)
+        patient_tests = PatientTests.objects.filter(patient_id=patient)
+        data["patient_tests"] = []
+        for patient_test in patient_tests:
+            patient_test_data = {
+                "analysis_date": patient_test.analysis_date,
+                "tests": [],
+            }
+
+            tests = Test.objects.filter(patient_test_id=patient_test)
+            for test in tests:
+                patient_test_data["tests"].append({
+                    "name": test.name,
+                })
+
+            data["patient_tests"].append(patient_test_data)
+
+        return Response(data)
+
 
 
 class PatientTestsView(APIView):
