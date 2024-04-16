@@ -13,7 +13,7 @@ from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .utils import draw_hematological_research
+from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status
 
 
 class DoctorSignupView(GenericAPIView):
@@ -224,18 +224,50 @@ class PatientTestsView(APIView):
                                                            name='hematological_research').first()
         immune_status_tests = Test.objects.filter(patient_test_id=patient_test,
                                                            name='immune_status').first()
+        cytokine_status_tests = Test.objects.filter(patient_test_id=patient_test,
+                                                           name='cytokine_status').first()
         if hematological_research_tests is not None and immune_status_tests is not None:
             lymf_indicator = Indicator.objects.get(name='lymphocytes')
             cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
             neu_indicator = Indicator.objects.get(name='neutrophils')
             cd4_indicator = Indicator.objects.get(name='t_helpers')
             cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+            cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
             lymf = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=lymf_indicator).value
             neu = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=neu_indicator).value
             cd19 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd19_indicator).value
             cd4 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd4_indicator).value
             cd8 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd8_indicator).value
-            draw_hematological_research([(cd19 / cd4) / 0.2, (lymf / cd19) / 2, (neu / lymf) / 0.4, (cd19 / cd8) / 0.2], patient_test)
+            cd3 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd3_indicator).value
+            draw_hematological_research([(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                        patient_test)
+            draw_immune_status([neu / cd4, neu / cd3, neu / lymf, neu / cd8], patient_test)
+
+        if cytokine_status_tests is not None:
+            cd3_il2_stimulated_indicator = Indicator.objects.get(name='cd3_il2_stimulated')
+            cd3_il2_spontaneous_indicator = Indicator.objects.get(name='cd3_il2_spontaneous')
+
+            cd3_tnfa_stimulated_indicator = Indicator.objects.get(name='cd3_tnfa_stimulated')
+            cd3_tnfa_spontaneous_indicator = Indicator.objects.get(name='cd3_tnfa_spontaneous')
+
+            cd3_ifny_stimulated_indicator = Indicator.objects.get(name='cd3_ifny_stimulated')
+            cd3_ifny_spontaneous_indicator = Indicator.objects.get(name='cd3_ifny_spontaneous')
+
+            cd3_il2_stimulated = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                      indicator_id=cd3_il2_stimulated_indicator).value
+            cd3_il2_spontaneous = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                      indicator_id=cd3_il2_spontaneous_indicator).value
+            cd3_tnfa_stimulated = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                      indicator_id=cd3_tnfa_stimulated_indicator).value
+            cd3_tnfa_spontaneous = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                      indicator_id=cd3_tnfa_spontaneous_indicator).value
+            cd3_ifny_stimulated = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                      indicator_id=cd3_ifny_stimulated_indicator).value
+            cd3_ifny_spontaneous = Analysis.objects.get(test_id=cytokine_status_tests,
+                                                       indicator_id=cd3_ifny_spontaneous_indicator).value
+            draw_cytokine_status([cd3_il2_stimulated / cd3_il2_spontaneous,
+                                  cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
+                                  cd3_ifny_stimulated / cd3_ifny_spontaneous], patient_test)
 
         return Response(f'Анализ с id {patient_test.id} создан')
 

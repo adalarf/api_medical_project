@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from datetime import date
 
 
 class CustomManager(BaseUserManager):
@@ -53,18 +56,21 @@ class Doctor(AbstractBaseUser):
         return True
 
 
+def validate_date(value):
+    if value > timezone.now().date():
+        raise ValidationError("Дата рождения не может быть больше текущей даты")
+
 class Patient(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     patronymic = models.CharField(max_length=255)
-    birth_date = models.DateField()
+    birth_date = models.DateField(validators=[validate_date])
     diagnosis = models.CharField(max_length=255)
     region = models.CharField(max_length=255)
     diagnosis_comment = models.TextField(null=True, blank=True)
     operation_comment = models.TextField(null=True, blank=True)
     chemoterapy_comment = models.TextField(null=True, blank=True)
     # patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT, null=True, blank=True)
-
 
 class PatientTests(models.Model):
     analysis_date = models.DateField()
@@ -82,15 +88,15 @@ class Test(models.Model):
 
 
 class Analysis(models.Model):
-    value = models.FloatField()
+    value = models.DecimalField(max_digits=5, decimal_places=2)
     indicator_id = models.ForeignKey('Indicator', on_delete=models.PROTECT)
     test_id = models.ForeignKey('Test', on_delete=models.PROTECT)
 
 
 class Indicator(models.Model):
     name = models.CharField(max_length=255)
-    interval_min = models.FloatField(blank=True, null=True)
-    interval_max = models.FloatField(blank=True, null=True)
+    interval_min = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    interval_max = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     unit = models.CharField(max_length=255, blank=True, null=True)
     # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
 
