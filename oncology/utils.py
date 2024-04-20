@@ -148,25 +148,10 @@ def draw_immune_status(values, patient_test):
     ax.plot(min_angles, min_indicator_values, linestyle='--', color='green', linewidth=2)
     ax.plot(max_angles, max_indicator_values, linestyle='--', color='green', linewidth=2)
 
-    plt.text(0.04, 1.2, '1.0', fontsize=8, color='black', ha='center')
-    plt.text(0.02, 2.2, '2.0', fontsize=8, color='black', ha='center')
-    plt.text(0.015, 3.2, '3.0', fontsize=8, color='black', ha='center')
-    plt.text(0.01, 4.2, '4.0', fontsize=8, color='black', ha='center')
-
-    plt.text(-1.33, 0.95, '2.6', fontsize=8, color='black', ha='center')
-    plt.text(-1.46, 1.95, '5.2', fontsize=8, color='black', ha='center')
-    plt.text(-1.50, 2.95, '7.8', fontsize=8, color='black', ha='center')
-    plt.text(-1.515, 3.95, '10.4', fontsize=8, color='black', ha='center')
-
-    plt.text(-3.2, 0.8, '0.4', fontsize=8, color='black', ha='center')
-    plt.text(-3.17, 1.8, '0.8', fontsize=8, color='black', ha='center')
-    plt.text(-3.16, 2.8, '1.2', fontsize=8, color='black', ha='center')
-    plt.text(-3.155, 3.8, '1.6', fontsize=8, color='black', ha='center')
-
-    plt.text(1.375, 1.05, '0.8', fontsize=8, color='black', ha='center')
-    plt.text(1.46, 2.05, '1.6', fontsize=8, color='black', ha='center')
-    plt.text(1.5, 3.05, '2.4', fontsize=8, color='black', ha='center')
-    plt.text(1.52, 4.05, '3.2', fontsize=8, color='black', ha='center')
+    draw_scaled_marks([0.04, 1.2, '1.0'], [0.02, 2.2, '2.0'], [0.015, 3.2, '3.0'], [0.01, 4.2, '4.0'],
+                      [-1.33, 0.95, '2.6'], [-1.46, 1.95, '5.2'], [-1.50, 2.95, '7.8'], [-1.515, 3.95, '10.4'],
+                      [-3.2, 0.8, '0.4'], [-3.17, 1.8, '0.8'], [-3.16, 2.8, '1.2'], [-3.155, 3.8, '1.6'],
+                      [1.375, 1.05, '0.8'], [1.46, 2.05, '1.6'], [1.5, 3.05, '2.4'], [1.52, 4.05, '3.2'])
 
     draw_values(angles, values, values_not_scaled, ax)
 

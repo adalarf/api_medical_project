@@ -46,6 +46,8 @@ urlpatterns = [
     path('api/v1/patients-info/', views.PatientInfoView.as_view()),
 
     path('api/v1/test-patient/<int:pk>/', views.TestsPatientView.as_view()),
+
+    path('api/v1/patient-analysis/<int:pk>/', views.PatientAnalysisView.as_view()),
 ]
 
 urlpatterns += doc_urls

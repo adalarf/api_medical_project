@@ -74,6 +74,25 @@ class AnalysisSerializer(serializers.ModelSerializer):
         model = Analysis
         fields = ['value', 'indicator_id']
 
+
+class IndicatorNameWithReferentValuesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Indicator
+        fields = ('name', 'interval_min', 'interval_max', 'unit',)
+
+class AnalysisWithReferentValuesSerializer(serializers.ModelSerializer):
+    indicator_id = IndicatorNameWithReferentValuesSerializer()
+
+    class Meta:
+        model = Analysis
+        fields = ['value', 'indicator_id']
+
+
+class TestNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = ('name',)
+
 class TestSerializer(serializers.ModelSerializer):
     analysis_id = AnalysisSerializer(many=True)
 
@@ -134,3 +153,4 @@ class GraphicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graphic
         fields = ('graphic',)
+

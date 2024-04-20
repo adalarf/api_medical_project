@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests, Graphic
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
-    PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer
+    PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer,\
+    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
@@ -173,9 +174,11 @@ class TestsPatientView(APIView):
                 "analysis_date": "2024-03-24",
                 "tests":[
                    {
+                       "id": 1,
                        "name": "hematological_research"
                    },
                    {
+                        "id": 2,
                         "name": "immune_status"
                    }
                 ]
@@ -197,6 +200,7 @@ class TestsPatientView(APIView):
             tests = Test.objects.filter(patient_test_id=patient_test)
             for test in tests:
                 patient_test_data["tests"].append({
+                    "id": test.pk,
                     "name": test.name,
                 })
 
@@ -377,6 +381,44 @@ class PatientTestsEditView(APIView):
         return Response('Анализ изменён')
 
 
+class PatientAnalysisView(RetrieveAPIView):
+    """
+    Эндпоинт для вывода конкретного анализа(теста). В параметре пути передается id анализа(теста). Вывод в виде:
+    {
+    "name": "hematological_research",
+    "analysis_date": "2024-03-24",
+    "analysis": [
+        {
+            "value": 5.0,
+            "interval_min": 4.5,
+            "interval_max": 11.0,
+            "unit": "10E9/л"
+        }
+    ]
+    """
+    serializer_class = TestNameSerializer
+    queryset = Test.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        patient_test = PatientTests.objects.get(id=instance.patient_test_id.id)
+        data['analysis_date'] = patient_test.analysis_date
+        analysises = Analysis.objects.filter(test_id=instance)
+        data['analysis'] = []
+        for analysis in analysises:
+            analysis_data = {
+                'value': analysis.value,
+                'interval_min': analysis.indicator_id.interval_min,
+                'interval_max': analysis.indicator_id.interval_max,
+                'unit': analysis.indicator_id.unit
+            }
+            data['analysis'].append(analysis_data)
+
+        return Response(data)
+
+
 class GraphicCreateView(APIView):
     def post(self, request):
         data = request.data.get('values')
@@ -385,9 +427,14 @@ class GraphicCreateView(APIView):
         return Response('image created')
 
 
-class GraphicView(APIView):
-    def get(self, request, pk):
-        graphic = Graphic.objects.get(id=pk)
-        serializer = GraphicSerializer(graphic)
+class GraphicView(RetrieveAPIView):
+    serializer_class = GraphicSerializer
+    queryset = PatientTests.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        graphics = Graphic.objects.filter(patient_test_id=instance)
+        serializer = self.get_serializer(graphics, many=True)
         data = serializer.data
+
         return Response(data)
