@@ -389,6 +389,7 @@ class PatientAnalysisView(RetrieveAPIView):
     "analysis_date": "2024-03-24",
     "analysis": [
         {
+            "name": "name",
             "value": 5.0,
             "interval_min": 4.5,
             "interval_max": 11.0,
@@ -409,6 +410,7 @@ class PatientAnalysisView(RetrieveAPIView):
         data['analysis'] = []
         for analysis in analysises:
             analysis_data = {
+                'name': analysis.name,
                 'value': analysis.value,
                 'interval_min': analysis.indicator_id.interval_min,
                 'interval_max': analysis.indicator_id.interval_max,
