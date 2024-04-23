@@ -198,6 +198,7 @@ class TestsPatientView(APIView):
 
         for patient_test in patient.patienttests_set.all():
             patient_test_data = {
+                "id": patient_test.id,
                 "analysis_date": patient_test.analysis_date,
                 "tests": []
             }
