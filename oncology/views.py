@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -187,21 +188,24 @@ class TestsPatientView(APIView):
     }
     """
     def get(self, request, pk):
-        data = {}
-        patient = Patient.objects.get(pk=pk)
-        patient_tests = PatientTests.objects.filter(patient_id=patient)
-        data["patient_tests"] = []
-        for patient_test in patient_tests:
+        patient = Patient.objects.prefetch_related(
+            Prefetch('patienttests_set', queryset=PatientTests.objects.prefetch_related('test_set'))
+        ).get(pk=pk)
+
+        data = {
+            "patient_tests": []
+        }
+
+        for patient_test in patient.patienttests_set.all():
             patient_test_data = {
                 "analysis_date": patient_test.analysis_date,
-                "tests": [],
+                "tests": []
             }
 
-            tests = Test.objects.filter(patient_test_id=patient_test)
-            for test in tests:
+            for test in patient_test.test_set.all():
                 patient_test_data["tests"].append({
                     "id": test.pk,
-                    "name": test.name,
+                    "name": test.name
                 })
 
             data["patient_tests"].append(patient_test_data)
