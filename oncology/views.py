@@ -443,7 +443,9 @@ class GraphicView(RetrieveAPIView):
         graphics = Graphic.objects.filter(patient_test_id=instance)
         serializer = self.get_serializer(graphics, many=True)
         data = serializer.data
+        # for i in data:
+        #     i['graphic'] = i['graphic'][28:]
         for i in data:
-            i['graphic'] = i['graphic'][28:]
+            i['graphic'] = i['graphic'][0:28] + i['graphic'][34:]
 
         return Response(data)
