@@ -259,4 +259,3 @@ def draw_cytokine_status(values, patient_test):
 
     return graphic_instance.id
 
-
