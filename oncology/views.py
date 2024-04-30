@@ -15,7 +15,7 @@ from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status
+from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status, draw_regeneration_type, draw_regeneration_type1
 from django.http import JsonResponse
 
 
@@ -278,6 +278,15 @@ class PatientTestsView(APIView):
                                                            name='immune_status').first()
         cytokine_status_tests = Test.objects.filter(patient_test_id=patient_test,
                                                            name='cytokine_status').first()
+        if hematological_research_tests is not None:
+            lymf_indicator = Indicator.objects.get(name='lymphocytes')
+            mon_indicator = Indicator.objects.get(name='monocytes')
+            neu_indicator = Indicator.objects.get(name='neutrophils')
+            lymf = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=lymf_indicator).value
+            mon = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=mon_indicator).value
+            neu = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=neu_indicator).value
+            draw_regeneration_type1([lymf / mon, neu / lymf, neu / mon], patient_test)
+
         if hematological_research_tests is not None and immune_status_tests is not None:
             lymf_indicator = Indicator.objects.get(name='lymphocytes')
             cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
