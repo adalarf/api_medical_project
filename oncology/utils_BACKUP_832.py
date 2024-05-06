@@ -252,6 +252,8 @@ def draw_cytokine_status(values, patient_test):
 
     return graphic
 
+<<<<<<< HEAD
+=======
 
 
 def draw_regeneration_type(values, patient_test):
@@ -378,3 +380,4 @@ def draw_regeneration_type1(values, patient_test):
 
     return graphic
 
+>>>>>>> hw6

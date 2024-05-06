@@ -39,17 +39,6 @@ def draw_values(angles, values, values_not_scaled, ax):
                     arrowprops=dict(arrowstyle="->", color='black'))
 
 
-def save_graphic(graphic_name, patient_test):
-    if Graphic.objects.exists():
-        latest_graphic_id = Graphic.objects.latest('pk').pk + 1
-    else:
-        latest_graphic_id = 1
-    file_path = f'media/{graphic_name}_{latest_graphic_id}.png'
-    plt.savefig(file_path)
-    graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
-    return graphic_instance.id
-
-
 def draw_values_with_other_angle(angles, values, values_not_scaled, ax):
     for i, angle in enumerate(angles):
         y = values[i]
@@ -123,9 +112,15 @@ def draw_hematological_research(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('hematological_research', patient_test)
+    if Graphic.objects.exists():
+        latest_graphic_id = Graphic.objects.latest('pk').pk + 1
+    else:
+        latest_graphic_id = 1
+    file_path = f'media/hematological_research_{latest_graphic_id}.png'
+    plt.savefig(file_path)
+    graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
 
-    return graphic
+    return graphic_instance.id
 
 
 def draw_immune_status(values, patient_test):
@@ -178,9 +173,15 @@ def draw_immune_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('immune_status', patient_test)
+    if Graphic.objects.exists():
+        latest_graphic_id = Graphic.objects.latest('pk').pk + 1
+    else:
+        latest_graphic_id = 1
+    file_path = f'media/immune_status_{latest_graphic_id}.png'
+    plt.savefig(file_path)
+    graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
 
-    return graphic
+    return graphic_instance.id
 
 
 def draw_cytokine_status(values, patient_test):
@@ -248,133 +249,14 @@ def draw_cytokine_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('cytokine_status', patient_test)
+    if Graphic.objects.exists():
+        latest_graphic_id = Graphic.objects.latest('pk').pk + 1
+    else:
+        latest_graphic_id = 1
+    file_path = f'media/cytokine_status_{latest_graphic_id}.png'
+    plt.savefig(file_path)
+    graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
 
-    return graphic
+    return graphic_instance.id
 
-
-
-def draw_regeneration_type(values, patient_test):
-    labels = np.array(['Лимфоциты/моноциты', 'Нейтрофилы/лимфоциты', 'Нейтрофилы/моноциты'])
-    values_not_scaled = make_usable_values(values)
-    values_scaled = [values[0] / Decimal(28.5), values[1] / Decimal(0.58), values[2] / Decimal(42.8)]
-    values, angles = make_usable_values(values_scaled, labels)
-
-    lymf_indicator = Indicator.objects.get(name='lymphocytes')
-    mon_indicator = Indicator.objects.get(name='monocytes')
-    neu_indicator = Indicator.objects.get(name='neutrophils')
-
-    min_indicator_values, max_indicator_values = get_refs([(lymf_indicator, mon_indicator, 28.5),
-                                                           (neu_indicator, lymf_indicator, 0.58),
-                                                           (neu_indicator, mon_indicator, 42.8)])
-
-    # min_indicator_values = [Decimal(6) / Decimal(28.5),
-    #                         Decimal(1.67) / Decimal(0.58),
-    #                         Decimal(10) / Decimal(42.8)]
-    # max_indicator_values = [Decimal(100) / Decimal(28.5),
-    #                         Decimal(1.8) / Decimal(0.58),
-    #                         Decimal(180) / Decimal(42.8)]
-
-    min_indicator_values, min_angles = make_usable_values(min_indicator_values, labels)
-    max_indicator_values, max_angles = make_usable_values(max_indicator_values, labels)
-
-
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw={'polar': True})
-
-    angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in angles]
-    min_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in min_angles]
-    max_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in max_angles]
-
-    ax.plot(angles, values, color='red', linewidth=2)
-    ax.plot(min_angles, min_indicator_values, linestyle='--', color='green', linewidth=2)
-    ax.plot(max_angles, max_indicator_values, linestyle='--', color='green', linewidth=2)
-
-    draw_scaled_marks([-0.47, 1.3, '28.5'], [-0.478, 2.3, '57.0'], [-0.489, 3.3, '85.5'], [-0.502, 4.3, '142.5'],
-                      [1.3, 1.05, '0.58'], [1.428, 2.05, '1.16'], [1.467, 3.05, '1.74'], [1.488, 4.05, '2.32'],
-                      [-2.3, 0.95, '42.8'], [-2.465, 1.95, '85.6'], [-2.51, 2.95, '128.4'], [-2.54, 3.95, '180.2'])
-
-    draw_values(angles, values, values_not_scaled, ax)
-
-    min_values_not_scaled, max_values_not_scaled = get_refs([(lymf_indicator, mon_indicator, None),
-                                                             (neu_indicator, lymf_indicator, None),
-                                                             (neu_indicator, mon_indicator, None)])
-
-    # min_values_not_scaled = [Decimal(6), Decimal(1.67), Decimal(10)]
-    # max_values_not_scaled = [Decimal(100), Decimal(1.8), Decimal(180)]
-
-    min_values_not_scaled = make_usable_values(min_values_not_scaled)
-    max_values_not_scaled = make_usable_values(max_values_not_scaled)
-
-
-    draw_values(min_angles, min_indicator_values, min_values_not_scaled, ax)
-    draw_values(max_angles, max_indicator_values, max_values_not_scaled, ax)
-
-    ax.set_yticks([1,2,3,4,5])
-    ax.set_yticklabels([])
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels)
-
-    labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
-    ax.legend(labels_l, labelspacing=0.1, fontsize='small')
-
-    graphic = save_graphic('regeneration_type', patient_test)
-
-    return graphic
-
-
-
-def draw_regeneration_type1(values, patient_test):
-    labels = np.array(['Лимфоциты/моноциты', 'Нейтрофилы/лимфоциты', 'Нейтрофилы/моноциты'])
-    values_not_scaled = make_usable_values(values)
-    values_scaled = [values[0] / Decimal(2), values[1] / Decimal(0.58), values[2] / Decimal(3)]
-    values, angles = make_usable_values(values_scaled, labels)
-
-    min_indicator_values = [Decimal(3.4) / Decimal(2),
-                            Decimal(1.89) / Decimal(0.58),
-                            Decimal(6.4) / Decimal(3)]
-    max_indicator_values = [Decimal(6.1) / Decimal(2),
-                            Decimal(2.1) / Decimal(0.58),
-                            Decimal(12.8) / Decimal(3)]
-
-    min_indicator_values, min_angles = make_usable_values(min_indicator_values, labels)
-    max_indicator_values, max_angles = make_usable_values(max_indicator_values, labels)
-
-
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw={'polar': True})
-
-    angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in angles]
-    min_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in min_angles]
-    max_angles = [(angle - np.pi / 6) % (2 * np.pi) for angle in max_angles]
-
-    ax.plot(angles, values, color='red', linewidth=2)
-    ax.plot(min_angles, min_indicator_values, linestyle='--', color='green', linewidth=2)
-    ax.plot(max_angles, max_indicator_values, linestyle='--', color='green', linewidth=2)
-
-    draw_scaled_marks([-0.47, 1.3, '1.85'], [-0.478, 2.3, '3.7'], [-0.489, 3.3, '5.55'], [-0.502, 4.3, '7.4'],
-                      [1.3, 1.05, '0.58'], [1.428, 2.05, '1.16'], [1.467, 3.05, '1.74'], [1.488, 4.05, '2.32'],
-                      [-2.3, 0.95, '3.0'], [-2.465, 1.95, '6.0'], [-2.51, 2.95, '9.0'], [-2.54, 3.95, '12.0'])
-
-    draw_values(angles, values, values_not_scaled, ax)
-
-    min_values_not_scaled = [Decimal(3.4), Decimal(1.89), Decimal(6.4)]
-    max_values_not_scaled = [Decimal(6.1), Decimal(2.1), Decimal(12.8)]
-
-    min_values_not_scaled = make_usable_values(min_values_not_scaled)
-    max_values_not_scaled = make_usable_values(max_values_not_scaled)
-
-
-    draw_values(min_angles, min_indicator_values, min_values_not_scaled, ax)
-    draw_values_with_other_angle(max_angles, max_indicator_values, max_values_not_scaled, ax)
-
-    ax.set_yticks([1,2,3,4,5])
-    ax.set_yticklabels([])
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels)
-
-    labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
-    ax.legend(labels_l, labelspacing=0.1, fontsize='small')
-
-    graphic = save_graphic('regeneration_type', patient_test)
-
-    return graphic
 
