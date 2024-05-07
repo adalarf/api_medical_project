@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView, ListAPIView
@@ -10,13 +11,14 @@ from rest_framework.authtoken.models import Token
 from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests, Graphic
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
     PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer,\
-    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer
+    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status, draw_regeneration_type, draw_regeneration_type1
 from django.http import JsonResponse
+from django.db.models import Q
 
 
 class DoctorSignupView(GenericAPIView):
@@ -431,6 +433,39 @@ class PatientAnalysisView(RetrieveAPIView):
                 'unit': analysis.indicator_id.unit
             }
             data['analysis'].append(analysis_data)
+
+        return Response(data)
+
+
+class SearchPatientView(GenericAPIView):
+    serializer_class = SearchPatientSerializer
+
+    def get(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        first_name = data.get('first_name', '')
+        last_name = data.get('last_name', '')
+        patronymic = data.get('patronymic', '')
+        birth_date = data.get('birth_date', '')
+
+        filters = Q()
+        if first_name:
+            filters &= Q(first_name__istartswith=first_name)
+        if last_name:
+            filters &= Q(last_name__istartswith=last_name)
+        if patronymic:
+            filters &= Q(patronymic__istartswith=patronymic)
+        if birth_date:
+            filters &= Q(birth_date=birth_date)
+
+        patients = Patient.objects.filter(filters).values('id', 'first_name', 'last_name', 'patronymic', 'birth_date')
+
+        data = [{'id': patient['id'],
+                 'first_name': patient['first_name'],
+                 'last_name': patient['last_name'],
+                 'patronymic': patient['patronymic'],
+                 'birth_date': patient['birth_date']} for patient in patients]
 
         return Response(data)
 

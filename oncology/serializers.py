@@ -149,6 +149,16 @@ class PatientTestsSerializer(serializers.ModelSerializer):
 #         return patient_test
 
 
+class SearchPatientSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    patronymic = serializers.CharField(required=False)
+    birth_date = serializers.DateField(required=False)
+    class Meta:
+        model = Patient
+        fields = ('first_name', 'last_name', 'patronymic', 'birth_date',)
+
+
 class GraphicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graphic
