@@ -417,6 +417,52 @@ class PatientAnalysisView(RetrieveAPIView):
     queryset = Test.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
+        names_dict = {
+            'leukocytes': 'лейкоциты',
+            'lymphocytes': 'лимфоциты',
+            'monocytes': 'моноциты',
+            'neutrophils': 'нейтрофилы',
+            'eosinophils': 'эозинофилы',
+            'basophils': 'базофилы',
+            'hemoglobin': 'гемоглобин',
+            'hematocrit': 'гематокрит',
+            'platelets': 'тромбоциты',
+            'erythrocytes': 'эритроциты',
+            'avg_erythrocyte_volume': 'ср.объем эритроциты',
+            'avg_hem_cont_in_eryth': 'ср.сод.гем. в эритроциты',
+            'avg_hem_conc_in_eryth': 'ср.конц.гем в эритроциты',
+            'eryth_volume_distr': 'распр.эритр. по объему',
+            'ave_platelet_volume': 'ср.объем эритроцита',
+            'thrombocrit': 'тромбокрит',
+            'thromb_volume_distr': 'распр.тромб. по объему',
+            'b_lymphocytes': 'б-лимфоциты',
+            't_cytotoxic_lymphocytes': 'т-цитоксические лимфоциты',
+            't_lymphocytes': 'т-лимфоциты',
+            't_helpers': 'т-хелперы',
+            'nk_cells': 'nk-клетки',
+            'tnk': 'тнк',
+            'active_t_lymphocytes': 'активные т-лимфоциты',
+            'igA': 'igA',
+            'igG': 'igG',
+            'igM': 'igM',
+            'circulating_immune_complexes': 'циркулирующие имунные комплексы',
+            'nst_test_spontaneous': 'нст-тест (спонтанный)',
+            'nst_test_stimulated': 'нст-тест (стимулированный)',
+            'leukotytes_bactericidal_activity': 'бактерицидная активность лейкоцитов',
+            'neutrophils_absorption_activity': 'поглотительная активность нейтрофилов',
+            'monocytes_absorption_activity': 'поглотительная активность моноцитов',
+            'cd3_ifny_stimulated': 'cd3+ifny+(стимулированный)',
+            'cd3_ifny_spontaneous': 'cd3+ifny+(спонтанный)',
+            'cd3_tnfa_stimulated': 'cd3+tnfa+(стимулированный)',
+            'cd3_tnfa_spontaneous': 'cd3+tnfa+(спонтанный)',
+            'cd3_il2_stimulated': 'cd3+il2+(стимулированный)',
+            'cd3_il2_spontaneous': 'cd3+il2+(спонтанный)',
+            'cd3_il4_stimulated': 'cd3+il4+(стимулированный)',
+            'cd3_il4_spontaneous': 'cd3+il4+(спонтанный)',
+            'cd3_negative_ifny_stimulated': 'cd3-ifny+(стимулированный)',
+            'cd3_negative_ifny_spontaneous': 'cd3-ifny+(спонтанный)',
+        }
+
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = serializer.data
@@ -426,7 +472,7 @@ class PatientAnalysisView(RetrieveAPIView):
         data['analysis'] = []
         for analysis in analysises:
             analysis_data = {
-                'name': analysis.indicator_id.name,
+                'name': names_dict[analysis.indicator_id.name],
                 'value': analysis.value,
                 'interval_min': analysis.indicator_id.interval_min,
                 'interval_max': analysis.indicator_id.interval_max,
