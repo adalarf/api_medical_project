@@ -19,6 +19,7 @@ from drf_yasg import openapi
 from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status, draw_regeneration_type, draw_regeneration_type1
 from django.http import JsonResponse
 from django.db.models import Q
+from django.db.models import Avg
 
 
 class DoctorSignupView(GenericAPIView):
@@ -396,28 +397,7 @@ class PatientTestsEditView(APIView):
 
         return Response('Анализ изменён')
 
-
-class PatientAnalysisView(RetrieveAPIView):
-    """
-    Эндпоинт для вывода конкретного анализа(теста). В параметре пути передается id анализа(теста). Вывод в виде:
-    {
-    "name": "hematological_research",
-    "analysis_date": "2024-03-24",
-    "analysis": [
-        {
-            "name": "name",
-            "value": 5.0,
-            "interval_min": 4.5,
-            "interval_max": 11.0,
-            "unit": "10E9/л"
-        }
-    ]
-    """
-    serializer_class = TestNameSerializer
-    queryset = Test.objects.all()
-
-    def retrieve(self, request, *args, **kwargs):
-        names_dict = {
+names_dict = {
             'leukocytes': 'лейкоциты',
             'lymphocytes': 'лимфоциты',
             'monocytes': 'моноциты',
@@ -463,6 +443,27 @@ class PatientAnalysisView(RetrieveAPIView):
             'cd3_negative_ifny_spontaneous': 'cd3-ifny+(спонтанный)',
         }
 
+
+class PatientAnalysisView(RetrieveAPIView):
+    """
+    Эндпоинт для вывода конкретного анализа(теста). В параметре пути передается id анализа(теста). Вывод в виде:
+    {
+    "name": "hematological_research",
+    "analysis_date": "2024-03-24",
+    "analysis": [
+        {
+            "name": "name",
+            "value": 5.0,
+            "interval_min": 4.5,
+            "interval_max": 11.0,
+            "unit": "10E9/л"
+        }
+    ]
+    """
+    serializer_class = TestNameSerializer
+    queryset = Test.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = serializer.data
@@ -481,6 +482,64 @@ class PatientAnalysisView(RetrieveAPIView):
             data['analysis'].append(analysis_data)
 
         return Response(data)
+
+
+class AnalysisComparisonView(RetrieveAPIView):
+    """
+    Эндпоинт для вывода сравнений анализов (печатная форма), в ссылке передается id у Test
+    Вывод в виде:{
+    "analysis": [
+        {
+            "name": "cd3_il2_stimulated",
+            "value": 140.0,
+            "avg_prev_value": null,
+            "interval_min": 0.33,
+            "interval_max": 0.65,
+            "unit": "10E9/л",
+            "changes": null
+        },
+    ]
+    """
+    queryset = Test.objects.all()
+    # serializer_class = TestNameSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+        tests_prev = Test.objects.filter(patient_test_id__analysis_date__lt=instance.patient_test_id.analysis_date)\
+            .values('pk')
+        analysis_prev = Analysis.objects.filter(test_id__in=tests_prev).values('value')
+        test_latest = tests_prev.latest('patient_test_id__analysis_date')
+        analysis_latest = Analysis.objects.filter(id=test_latest['pk']).values('value')
+        analysises = Analysis.objects.filter(test_id__patient_test_id=instance.patient_test_id).values(
+                                             'indicator_id__name', 'value', 'indicator_id__interval_min',
+                                             'indicator_id__interval_max', 'indicator_id__unit'
+                                             )
+        data['analysis'] = []
+        for analysis in analysises:
+            prev_value = analysis_prev.filter(indicator_id__name=analysis['indicator_id__name']).aggregate(Avg('value'))[
+                'value__avg']
+            latest_value = analysis_latest.filter(indicator_id__name=analysis['indicator_id__name']).values_list('value',
+                                                                                                     flat=True).first()
+
+            if prev_value is not None and latest_value is not None:
+                changes = (analysis['value'] - prev_value) / prev_value * 100  # Процентное изменение
+            else:
+                changes = latest_value
+
+            analysis_data = {
+                'name': analysis['indicator_id__name'],
+                'value': analysis['value'],
+                'avg_prev_value': prev_value,
+                'interval_min': analysis['indicator_id__interval_min'],
+                'interval_max': analysis['indicator_id__interval_max'],
+                'unit': analysis['indicator_id__unit'],
+                'changes': changes
+            }
+            data['analysis'].append(analysis_data)
+
+        return Response(data)
+
 
 
 class SearchPatientView(GenericAPIView):
