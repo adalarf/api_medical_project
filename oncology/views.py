@@ -519,16 +519,15 @@ class AnalysisComparisonView(RetrieveAPIView):
         for analysis in analysises:
             prev_value = analysis_prev.filter(indicator_id__name=analysis['indicator_id__name']).aggregate(Avg('value'))[
                 'value__avg']
-            latest_value = analysis_latest.filter(indicator_id__name=analysis['indicator_id__name']).values_list('value',
-                                                                                                     flat=True).first()
+            latest_value = analysis_latest.filter(indicator_id__name=analysis['indicator_id__name'])
 
             if prev_value is not None and latest_value is not None:
-                changes = (analysis['value'] - prev_value) / prev_value * 100  # Процентное изменение
+                changes = (analysis['value'] - prev_value) / prev_value * 100
             else:
                 changes = latest_value
 
             analysis_data = {
-                'name': analysis['indicator_id__name'],
+                'name': names_dict[analysis['indicator_id__name']],
                 'value': analysis['value'],
                 'avg_prev_value': prev_value,
                 'interval_min': analysis['indicator_id__interval_min'],
