@@ -501,41 +501,70 @@ class AnalysisComparisonView(RetrieveAPIView):
     ]
     """
     queryset = Test.objects.all()
-    # serializer_class = TestNameSerializer
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
-        tests_prev = Test.objects.filter(patient_test_id__analysis_date__lt=instance.patient_test_id.analysis_date)\
-            .values('pk')
-        analysis_prev = Analysis.objects.filter(test_id__in=tests_prev).values('value')
-        test_latest = tests_prev.latest('patient_test_id__analysis_date')
-        analysis_latest = Analysis.objects.filter(id=test_latest['pk']).values('value')
-        analysises = Analysis.objects.filter(test_id__patient_test_id=instance.patient_test_id).values(
-                                             'indicator_id__name', 'value', 'indicator_id__interval_min',
-                                             'indicator_id__interval_max', 'indicator_id__unit'
-                                             )
+
+        patient_test = PatientTests.objects.get(id=instance.patient_test_id.id)
+        patient_test_date = patient_test.analysis_date
+        season = str(patient_test_date).split('-')[1]
+        season_name = 'spring' if season in ['02', '03', '04', '05', '06', '07'] else 'autumn'
+
+        if season_name == 'spring':
+            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=instance.patient_test_id.id) &
+                                                             Q(analysis_date__lt=instance.patient_test_id.analysis_date) &
+                                                             Q(analysis_date__month__in=[2, 3, 4, 5, 6, 7])) \
+                .values('id')
+        else:
+            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=data['patient_id']) &
+                                                             Q(analysis_date__lt=instance.patient_test_id.analysis_date) &
+                                                             Q(analysis_date__month__in=[8, 9, 10, 11, 12, 1])) \
+                .values('id')
+
+        tests_prev = Test.objects.filter(patient_test_id__in=patient_tests_prev) \
+            .values('id')
+
+        analysises_prev = Analysis.objects.filter(test_id__in=tests_prev)
+
         data['analysis'] = []
-        for analysis in analysises:
-            prev_value = analysis_prev.filter(indicator_id__name=analysis['indicator_id__name']).aggregate(Avg('value'))[
-                'value__avg']
-            latest_value = analysis_latest.filter(indicator_id__name=analysis['indicator_id__name'])
 
-            if prev_value is not None and latest_value is not None:
-                changes = (analysis['value'] - prev_value) / prev_value * 100
-            else:
-                changes = latest_value
-
-            analysis_data = {
-                'name': names_dict[analysis['indicator_id__name']],
-                'value': analysis['value'],
-                'avg_prev_value': prev_value,
-                'interval_min': analysis['indicator_id__interval_min'],
-                'interval_max': analysis['indicator_id__interval_max'],
-                'unit': analysis['indicator_id__unit'],
-                'changes': changes
-            }
-            data['analysis'].append(analysis_data)
+        tests = Test.objects.filter(patient_test_id=instance.patient_test_id).values('id')
+        analysises = Analysis.objects.filter(test_id__in=tests).values('id', 'indicator_id__name',
+                                                                       'value', 'indicator_id__unit',
+                                                                       'indicator_id__interval_min',
+                                                                       'indicator_id__interval_max')
+        if analysises_prev:
+            for analysis in analysises:
+                name = analysis['indicator_id__name']
+                avg = analysises_prev.filter(indicator_id__name=name).aggregate(Avg('value'))[
+                    'value__avg']
+                changes = (analysis['value'] - avg) / avg * 100
+                res = {
+                    'name': names_dict[name],
+                    'value': analysis['value'],
+                    'avg_prev_value': round(avg, 2),
+                    'interval_min': analysis['indicator_id__interval_min'],
+                    'interval_max': analysis['indicator_id__interval_max'],
+                    'unit': analysis['indicator_id__unit'],
+                    'changes': round(changes, 2)
+                }
+                data['analysis'].append(res)
+        else:
+            for analysis in analysises:
+                name = analysis['indicator_id__name']
+                avg = None
+                changes = None
+                res = {
+                    'name': names_dict[name],
+                    'value': analysis['value'],
+                    'avg_prev_value': avg,
+                    'interval_min': analysis['indicator_id__interval_min'],
+                    'interval_max': analysis['indicator_id__interval_max'],
+                    'unit': analysis['indicator_id__unit'],
+                    'changes': changes
+                }
+                data['analysis'].append(res)
 
         return Response(data)
 
