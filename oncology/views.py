@@ -512,12 +512,12 @@ class AnalysisComparisonView(RetrieveAPIView):
         season_name = 'spring' if season in ['02', '03', '04', '05', '06', '07'] else 'autumn'
 
         if season_name == 'spring':
-            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=instance.patient_test_id.id) &
+            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=instance.patient_test_id.patient_id.id) &
                                                              Q(analysis_date__lt=instance.patient_test_id.analysis_date) &
                                                              Q(analysis_date__month__in=[2, 3, 4, 5, 6, 7])) \
                 .values('id')
         else:
-            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=data['patient_id']) &
+            patient_tests_prev = PatientTests.objects.filter(Q(patient_id_id=instance.patient_test_id.patient_id.id) &
                                                              Q(analysis_date__lt=instance.patient_test_id.analysis_date) &
                                                              Q(analysis_date__month__in=[8, 9, 10, 11, 12, 1])) \
                 .values('id')
