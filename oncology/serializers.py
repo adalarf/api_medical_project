@@ -93,6 +93,12 @@ class TestNameSerializer(serializers.ModelSerializer):
         model = Test
         fields = ('name',)
 
+
+class ConclusionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = ('conclusion', 'recommendations',)
+
 class TestSerializer(serializers.ModelSerializer):
     analysis_id = AnalysisSerializer(many=True)
 

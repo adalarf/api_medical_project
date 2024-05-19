@@ -54,6 +54,8 @@ urlpatterns = [
     path('api/v1/search-patient/', views.SearchPatientView.as_view()),
 
     path('api/v1/analysis-comparison/<int:pk>/', views.AnalysisComparisonView.as_view()),
+
+    path('api/v1/conclusion/<int:pk>/', views.ConclusionView.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += doc_urls

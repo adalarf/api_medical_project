@@ -84,6 +84,8 @@ class PatientTests(models.Model):
 class Test(models.Model):
     # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT, null=True)
     name = models.CharField(max_length=255)
+    conclusion = models.TextField(null=True, blank=True)
+    recommendations = models.TextField(null=True, blank=True)
     patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
 
 

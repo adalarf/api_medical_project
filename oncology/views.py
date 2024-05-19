@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.db.models import Prefetch
 from rest_framework import status
-from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView, ListAPIView
+from rest_framework.generics import GenericAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView, CreateAPIView,\
+    ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -11,15 +12,17 @@ from rest_framework.authtoken.models import Token
 from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests, Graphic
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
     PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer,\
-    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer
+    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer, ConclusionSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status, draw_regeneration_type, draw_regeneration_type1
+from .utils import draw_hematological_research, draw_immune_status, draw_cytokine_status, draw_regeneration_type,\
+    draw_regeneration_type1, get_refs, get_hematological_research_result, get_immune_status_result, get_cytokine_status_result, get_regeneration_type_result
 from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models import Avg
+from decimal import Decimal
 
 
 class DoctorSignupView(GenericAPIView):
@@ -288,6 +291,15 @@ class PatientTestsView(APIView):
             lymf = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=lymf_indicator).value
             mon = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=mon_indicator).value
             neu = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=neu_indicator).value
+
+            regeneration_type_min = [Decimal(3.4), Decimal(1.89), Decimal(6.4)]
+            regeneration_type_max = [Decimal(6.1), Decimal(2.1), Decimal(12.8)]
+
+            get_regeneration_type_result(hematological_research_tests,
+                                         [lymf / mon, neu / lymf, neu / mon],
+                                         regeneration_type_min,
+                                         regeneration_type_max)
+
             draw_regeneration_type1([lymf / mon, neu / lymf, neu / mon], patient_test)
 
         if hematological_research_tests is not None and immune_status_tests is not None:
@@ -303,6 +315,25 @@ class PatientTestsView(APIView):
             cd4 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd4_indicator).value
             cd8 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd8_indicator).value
             cd3 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd3_indicator).value
+
+            hematological_research_min, hematological_research_max = get_refs([(cd19_indicator, cd4_indicator, None),
+                                                                     (lymf_indicator, cd19_indicator, None),
+                                                                     (neu_indicator, lymf_indicator, None),
+                                                                     (cd19_indicator, cd8_indicator, None)])
+
+            immune_status_min, immune_status_max = get_refs([(neu_indicator, cd4_indicator, None),
+                                                                     (neu_indicator, cd3_indicator, None),
+                                                                     (neu_indicator, lymf_indicator, None),
+                                                                     (neu_indicator, cd8_indicator, None)])
+
+            get_hematological_research_result(hematological_research_tests,
+                                              [(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                              hematological_research_min, hematological_research_max)
+
+            get_immune_status_result(immune_status_tests,
+                                     [neu / cd4, neu / cd3, neu / lymf, neu / cd8],
+                                     immune_status_min, immune_status_max)
+
             draw_hematological_research([(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
                                         patient_test)
             draw_immune_status([neu / cd4, neu / cd3, neu / lymf, neu / cd8], patient_test)
@@ -329,6 +360,17 @@ class PatientTestsView(APIView):
                                                       indicator_id=cd3_ifny_stimulated_indicator).value
             cd3_ifny_spontaneous = Analysis.objects.get(test_id=cytokine_status_tests,
                                                        indicator_id=cd3_ifny_spontaneous_indicator).value
+
+            cytokine_status_min = [80, 80, 80]
+            cytokine_status_max = [120, 120, 120]
+
+            get_cytokine_status_result(cytokine_status_tests,
+                                       [cd3_il2_stimulated / cd3_il2_spontaneous,
+                                        cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
+                                        cd3_ifny_stimulated / cd3_ifny_spontaneous],
+                                       cytokine_status_min,
+                                       cytokine_status_max)
+
             draw_cytokine_status([cd3_il2_stimulated / cd3_il2_spontaneous,
                                   cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
                                   cd3_ifny_stimulated / cd3_ifny_spontaneous], patient_test)
@@ -482,6 +524,14 @@ class PatientAnalysisView(RetrieveAPIView):
             data['analysis'].append(analysis_data)
 
         return Response(data)
+
+
+class ConclusionView(RetrieveUpdateAPIView):
+    """
+    Эндпоинт для вывода/редактирования заключения и рекомендаций теста. В ссылке передается id теста
+    """
+    queryset = Test.objects.all()
+    serializer_class = ConclusionSerializer
 
 
 class AnalysisComparisonView(RetrieveAPIView):

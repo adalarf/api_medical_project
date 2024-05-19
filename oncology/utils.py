@@ -2,7 +2,7 @@ import decimal
 
 import numpy as np
 import matplotlib.pyplot as plt
-from .models import Graphic, Indicator
+from .models import Graphic, Indicator, Test
 from decimal import Decimal
 
 
@@ -378,3 +378,43 @@ def draw_regeneration_type1(values, patient_test):
 
     return graphic
 
+
+def get_hematological_research_result(hematological_research_tests: Test, values, min_values, max_values):
+    for i in range(len(values)):
+        if min_values[i] <= values[i] <= max_values[i]:
+            hematological_research_tests.conclusion = "значения в пределах нормы"
+            hematological_research_tests.recommendations = "test"
+        else:
+            hematological_research_tests.conclusion = "значения с отклонениями от нормы"
+            hematological_research_tests.recommendations = "test"
+        hematological_research_tests.save()
+
+def get_immune_status_result(immune_status_tests: Test, values, min_values, max_values):
+    for i in range(len(values)):
+        if min_values[i] <= values[i] <= max_values[i]:
+            immune_status_tests.conclusion = "значения в пределах нормы"
+            immune_status_tests.recommendations = "test"
+        else:
+            immune_status_tests.conclusion = "значения с отклонениями от нормы"
+            immune_status_tests.recommendations = "test"
+        immune_status_tests.save()
+
+def get_cytokine_status_result(cytokine_status_tests: Test, values, min_values, max_values):
+    for i in range(len(values)):
+        if min_values[i] <= values[i] <= max_values[i]:
+            cytokine_status_tests.conclusion = "значения в пределах нормы"
+            cytokine_status_tests.recommendations = "test"
+        else:
+            cytokine_status_tests.conclusion = "значения с отклонениями от нормы"
+            cytokine_status_tests.recommendations = "test"
+        cytokine_status_tests.save()
+
+def get_regeneration_type_result(regeneration_type_tests: Test, values, min_values, max_values):
+    for i in range(len(values)):
+        if min_values[i] <= values[i] <= max_values[i]:
+            regeneration_type_tests.conclusion = "значения в пределах нормы"
+            regeneration_type_tests.recommendations = "test"
+        else:
+            regeneration_type_tests.conclusion = "значения с отклонениями от нормы"
+            regeneration_type_tests.recommendations = "test"
+        regeneration_type_tests.save()
