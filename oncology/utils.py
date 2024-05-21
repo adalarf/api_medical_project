@@ -4,6 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .models import Graphic, Indicator, Test
 from decimal import Decimal
+from io import BytesIO
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import boto3
+from django.conf import settings
 
 
 def get_indicator_values(first, second, val):
@@ -39,14 +43,27 @@ def draw_values(angles, values, values_not_scaled, ax):
                     arrowprops=dict(arrowstyle="->", color='black'))
 
 
-def save_graphic(graphic_name, patient_test):
+def save_graphic(fig, graphic_name, patient_test):
     if Graphic.objects.exists():
         latest_graphic_id = Graphic.objects.latest('pk').pk + 1
     else:
         latest_graphic_id = 1
-    file_path = f'media/{graphic_name}_{latest_graphic_id}.png'
-    plt.savefig(file_path)
+    # file_path = f'media/{graphic_name}_{latest_graphic_id}.png'
+    file_path = f'{graphic_name}_{latest_graphic_id}.png'
+    canvas = FigureCanvasAgg(fig)
+    buffer = BytesIO()
+    canvas.print_png(buffer)
+    buffer.seek(0)
+
+    s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                      endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                      region_name=settings.AWS_S3_REGION_NAME)
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    file_path = f'{file_path}.png'
+    s3.upload_fileobj(buffer, bucket_name, file_path)
     graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
+
     return graphic_instance.id
 
 
@@ -123,7 +140,7 @@ def draw_hematological_research(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('hematological_research', patient_test)
+    graphic = save_graphic(fig, 'hematological_research', patient_test)
 
     return graphic
 
@@ -178,7 +195,7 @@ def draw_immune_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('immune_status', patient_test)
+    graphic = save_graphic(fig, 'immune_status', patient_test)
 
     return graphic
 
@@ -248,7 +265,7 @@ def draw_cytokine_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('cytokine_status', patient_test)
+    graphic = save_graphic(fig, 'cytokine_status', patient_test)
 
     return graphic
 
@@ -317,7 +334,7 @@ def draw_regeneration_type(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('regeneration_type', patient_test)
+    graphic = save_graphic(fig, 'regeneration_type', patient_test)
 
     return graphic
 
@@ -374,7 +391,7 @@ def draw_regeneration_type1(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic('regeneration_type', patient_test)
+    graphic = save_graphic(fig, 'regeneration_type', patient_test)
 
     return graphic
 
