@@ -320,6 +320,15 @@ class PatientTestsView(APIView):
                                                                      (lymf_indicator, cd19_indicator, None),
                                                                      (neu_indicator, lymf_indicator, None),
                                                                      (cd19_indicator, cd8_indicator, None)])
+            # hematological_research_min = [cd19_indicator.interval_min /cd4_indicator.interval_min,
+            #                               lymf_indicator.interval_min / cd19_indicator.interval_min,
+            #                               neu_indicator.interval_min / lymf_indicator.interval_min,
+            #                               cd19_indicator.interval_min / cd8_indicator.interval_min]
+            #
+            # hematological_research_max = [cd19_indicator.interval_max / cd4_indicator.interval_max,
+            #                               lymf_indicator.interval_max / cd19_indicator.interval_max,
+            #                               neu_indicator.interval_max / lymf_indicator.interval_max,
+            #                               cd19_indicator.interval_max / cd8_indicator.interval_max]
 
             immune_status_min, immune_status_max = get_refs([(neu_indicator, cd4_indicator, None),
                                                                      (neu_indicator, cd3_indicator, None),
