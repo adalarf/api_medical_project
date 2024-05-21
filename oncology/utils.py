@@ -60,7 +60,6 @@ def save_graphic(fig, graphic_name, patient_test):
                       endpoint_url=settings.AWS_S3_ENDPOINT_URL,
                       region_name=settings.AWS_S3_REGION_NAME)
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME
-    file_path = f'{file_path}.png'
     s3.upload_fileobj(buffer, bucket_name, file_path)
     graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
 
