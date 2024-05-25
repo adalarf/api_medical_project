@@ -1,0 +1,166 @@
+from .models import Indicator, Test, Analysis
+from .utils import get_refs, get_hematological_research_result, get_immune_status_result, get_cytokine_status_result, get_regeneration_type_result
+from decimal import Decimal
+
+
+def change_hematological_refs(request_data, instance):
+    lymf_indicator = Indicator.objects.get(name='lymphocytes')
+    cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
+    neu_indicator = Indicator.objects.get(name='neutrophils')
+    cd4_indicator = Indicator.objects.get(name='t_helpers')
+    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+
+    hematological_research_min, hematological_research_max = get_refs([(cd19_indicator, cd4_indicator, None),
+                                                                       (lymf_indicator, cd19_indicator, None),
+                                                                       (neu_indicator, lymf_indicator, None),
+                                                                       (cd19_indicator, cd8_indicator, None)])
+
+    cd19_cd4_min = request_data.get("cd19_cd4_min", hematological_research_min[0])
+    lymf_cd19_min = request_data.get("lymf_cd19_min", hematological_research_min[1])
+    neu_lymf_min = request_data.get("neu_lymf_min", hematological_research_min[2])
+    cd19_cd8_min = request_data.get("cd19_cd8_min", hematological_research_min[3])
+
+    cd19_cd4_max = request_data.get("cd19_cd4_max", hematological_research_max[0])
+    lymf_cd19_max = request_data.get("lymf_cd19_max", hematological_research_max[1])
+    neu_lymf_max = request_data.get("neu_lymf_max", hematological_research_max[2])
+    cd19_cd8_max = request_data.get("cd19_cd8_max", hematological_research_max[3])
+
+    min_values = [cd19_cd4_min, lymf_cd19_min, neu_lymf_min, cd19_cd8_min]
+    max_values = [cd19_cd4_max, lymf_cd19_max, neu_lymf_max, cd19_cd8_max]
+
+    hematological_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                          name="hematological_research")
+    immune_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                   name="immune_status")
+
+    hematological_analysis = Analysis.objects.filter(test_id=hematological_test)
+    immune_analysis = Analysis.objects.filter(test_id=immune_test)
+
+    cd19 = immune_analysis.get(indicator_id__name='b_lymphocytes').value
+    cd4 = immune_analysis.get(indicator_id__name='t_helpers').value
+    lymf = hematological_analysis.get(indicator_id__name='lymphocytes').value
+    neu = hematological_analysis.get(indicator_id__name='neutrophils').value
+    cd8 = immune_analysis.get(indicator_id__name='t_cytotoxic_lymphocytes').value
+
+    values = [cd19 / cd4, lymf / cd19, neu / lymf, cd19 / cd8]
+
+    get_hematological_research_result(instance, values, min_values, max_values)
+
+
+def change_immune_refs(request_data, instance):
+    lymf_indicator = Indicator.objects.get(name='lymphocytes')
+    neu_indicator = Indicator.objects.get(name='neutrophils')
+    cd4_indicator = Indicator.objects.get(name='t_helpers')
+    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+    cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
+
+    immune_status_min, immune_status_max = get_refs([(neu_indicator, cd4_indicator, None),
+                                                     (neu_indicator, cd3_indicator, None),
+                                                     (neu_indicator, lymf_indicator, None),
+                                                     (neu_indicator, cd8_indicator, None)])
+
+    neu_cd4_min = request_data.get("neu_cd4_min", immune_status_min[0])
+    neu_cd3_min = request_data.get("neu_cd3_min", immune_status_min[1])
+    neu_lymf_min = request_data.get("neu_lymf_min", immune_status_min[2])
+    neu_cd8_min = request_data.get("neu_cd8_min", immune_status_min[3])
+
+    neu_cd4_max = request_data.get("neu_cd4_max", immune_status_max[0])
+    neu_cd3_max = request_data.get("neu_cd3_max", immune_status_max[1])
+    neu_lymf_max = request_data.get("neu_lymf_max", immune_status_max[2])
+    neu_cd8_max = request_data.get("neu_cd8_max", immune_status_max[3])
+
+    min_values = [neu_cd4_min, neu_cd3_min, neu_lymf_min, neu_cd8_min]
+    max_values = [neu_cd4_max, neu_cd3_max, neu_lymf_max, neu_cd8_max]
+
+    hematological_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                          name="hematological_research")
+    immune_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                   name="immune_status")
+
+    hematological_analysis = Analysis.objects.filter(test_id=hematological_test)
+    immune_analysis = Analysis.objects.filter(test_id=immune_test)
+
+    neu = hematological_analysis.get(indicator_id__name='neutrophils').value
+    cd4 = immune_analysis.get(indicator_id__name='t_helpers').value
+    cd3 = immune_analysis.get(indicator_id__name='t_lymphocytes').value
+    lymf = hematological_analysis.get(indicator_id__name='lymphocytes').value
+    cd8 = immune_analysis.get(indicator_id__name='t_cytotoxic_lymphocytes').value
+
+    values = [neu / cd4, neu / cd3, neu / lymf, neu / cd8]
+
+    get_immune_status_result(instance, values, min_values, max_values)
+
+
+def change_cytokine_refs(request_data, instance):
+    cd3_il2_stimulated_indicator = Indicator.objects.get(name='cd3_il2_stimulated')
+    cd3_il2_spontaneous_indicator = Indicator.objects.get(name='cd3_il2_spontaneous')
+
+    cd3_tnfa_stimulated_indicator = Indicator.objects.get(name='cd3_tnfa_stimulated')
+    cd3_tnfa_spontaneous_indicator = Indicator.objects.get(name='cd3_tnfa_spontaneous')
+
+    cd3_ifny_stimulated_indicator = Indicator.objects.get(name='cd3_ifny_stimulated')
+    cd3_ifny_spontaneous_indicator = Indicator.objects.get(name='cd3_ifny_spontaneous')
+
+    cytokine_status_min = [80, 80, 80]
+    cytokine_status_max = [120, 120, 120]
+
+    cd3_il2_min = request_data.get("cd3_il2_min", cytokine_status_min[0])
+    cd3_tnfa_min = request_data.get("cd3_tnfa_min", cytokine_status_min[1])
+    cd3_ifny_min = request_data.get("cd3_ifny_min", cytokine_status_min[2])
+
+    cd3_il2_max = request_data.get("cd3_il2_max", cytokine_status_max[0])
+    cd3_tnfa_max = request_data.get("cd3_tnfa_max", cytokine_status_max[1])
+    cd3_ifny_max = request_data.get("cd3_ifny_max", cytokine_status_max[2])
+
+    min_values = [cd3_il2_min, cd3_tnfa_min, cd3_ifny_min]
+    max_values = [cd3_il2_max, cd3_tnfa_max, cd3_ifny_max]
+
+    cytokine_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                     name="cytokine_status")
+
+    cytokine_analysis = Analysis.objects.filter(test_id=cytokine_test)
+
+    cd3_il2_stimulated = cytokine_analysis.get(indicator_id__name='cd3_il2_stimulated').value
+    cd3_il2_spontaneous = cytokine_analysis.get(indicator_id__name='cd3_il2_spontaneous').value
+    cd3_tnfa_stimulated = cytokine_analysis.get(indicator_id__name='cd3_tnfa_stimulated').value
+    cd3_tnfa_spontaneous = cytokine_analysis.get(indicator_id__name='cd3_tnfa_spontaneous').value
+    cd3_ifny_stimulated = cytokine_analysis.get(indicator_id__name='cd3_ifny_stimulated').value
+    cd3_ifny_spontaneous = cytokine_analysis.get(indicator_id__name='cd3_ifny_spontaneous').value
+
+    values = [cd3_il2_stimulated / cd3_il2_spontaneous,
+              cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
+              cd3_ifny_stimulated / cd3_ifny_spontaneous]
+
+    get_cytokine_status_result(instance, values, min_values, max_values)
+
+
+def change_regeneration_refs(request_data, instance):
+    lymf_indicator = Indicator.objects.get(name='lymphocytes')
+    mon_indicator = Indicator.objects.get(name='monocytes')
+    neu_indicator = Indicator.objects.get(name='neutrophils')
+
+    regeneration_type_min = [Decimal(3.4), Decimal(1.89), Decimal(6.4)]
+    regeneration_type_max = [Decimal(6.1), Decimal(2.1), Decimal(12.8)]
+
+    lymf_mon_min = request_data.get("lymf_mon_min", regeneration_type_min[0])
+    neu_lymf_min = request_data.get("neu_lymf_min", regeneration_type_min[1])
+    neu_mon_min = request_data.get("neu_mon_min", regeneration_type_min[2])
+
+    lymf_mon_max = request_data.get("lymf_mon_max", regeneration_type_max[0])
+    neu_lymf_max = request_data.get("neu_lymf_max", regeneration_type_max[1])
+    neu_mon_max = request_data.get("neu_mon_max", regeneration_type_max[2])
+
+    min_values = [lymf_mon_min, neu_lymf_min, neu_mon_min]
+    max_values = [lymf_mon_max, neu_lymf_max, neu_mon_max]
+
+    regeneration_test = Test.objects.get(patient_test_id=instance.patient_test_id,
+                                         name="regeneration_type")
+    regeneration_analysis = Analysis.objects.filter(test_id=regeneration_test)
+
+    lymf = regeneration_analysis.get(indicator_id__name='lymphocytes').value
+    mon = regeneration_analysis.get(indicator_id__name='monocytes').value
+    neu = regeneration_analysis.get(indicator_id__name='neutrophils').value
+
+    values = [lymf / mon, neu / lymf, neu / mon]
+
+    get_regeneration_type_result(instance, values, min_values, max_values)

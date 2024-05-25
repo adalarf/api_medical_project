@@ -95,9 +95,23 @@ class TestNameSerializer(serializers.ModelSerializer):
 
 
 class ConclusionSerializer(serializers.ModelSerializer):
+    conclusion = serializers.CharField(required=False)
+    recommendations = serializers.CharField(required=False)
     class Meta:
         model = Test
         fields = ('conclusion', 'recommendations',)
+
+
+class ChangeRefsSerializer(serializers.Serializer):
+    cd19_cd4_min = serializers.FloatField(required=False)
+    lymf_cd19_min = serializers.FloatField(required=False)
+    neu_lymf_min = serializers.FloatField(required=False)
+    cd19_cd8_min = serializers.FloatField(required=False)
+
+    cd19_cd4_max = serializers.FloatField(required=False)
+    lymf_cd19_max = serializers.FloatField(required=False)
+    neu_lymf_max = serializers.FloatField(required=False)
+    cd19_cd8_max = serializers.FloatField(required=False)
 
 class TestSerializer(serializers.ModelSerializer):
     analysis_id = AnalysisSerializer(many=True)

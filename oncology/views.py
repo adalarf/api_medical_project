@@ -12,7 +12,8 @@ from rest_framework.authtoken.models import Token
 from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test, Analysis, PatientTests, Graphic
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
     PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer,\
-    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer, ConclusionSerializer
+    AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer,\
+    ConclusionSerializer, ChangeRefsSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
@@ -23,6 +24,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models import Avg
 from decimal import Decimal
+from .test_utils import change_hematological_refs, change_immune_refs, change_cytokine_refs, change_regeneration_refs
 
 
 class DoctorSignupView(GenericAPIView):
@@ -541,6 +543,72 @@ class ConclusionView(RetrieveUpdateAPIView):
     """
     queryset = Test.objects.all()
     serializer_class = ConclusionSerializer
+
+
+class ChangeRefsView(RetrieveUpdateAPIView):
+    """
+    Эндпоинт для изменения реф.значений. В ссылке передается id у Test.
+    Для hematological_research:
+    {
+        "cd19_cd4_min": 1,
+        "lymf_cd19_min": 1,
+        "neu_lymf_min": 1,
+        "cd19_cd8_min": 1,
+        "cd19_cd4_max": 1,
+        "lymf_cd19_max": 1,
+        "neu_lymf_max": 1,
+        "cd19_cd8_max": 1
+    }
+    Для immune_status:
+    {
+        "neu_cd4_min": 1,
+        "neu_cd3_min": 1,
+        "neu_lymf_min": 1,
+        "neu_cd8_min": 1,
+        "neu_cd4_max": 1,
+        "neu_cd3_max": 1,
+        "neu_lymf_max": 1,
+        "neu_cd8_max": 1
+    }
+    Для cytokine_status:
+    {
+        "cd3_il2_min": 1,
+        "cd3_tnfa_min": 1,
+        "cd3_ifny_min": 1,
+        "cd3_il2_max": 1,
+        "cd3_tnfa_max": 1,
+        "cd3_ifny_max": 1
+    }
+    Для regeneration_type:
+    {
+        "lymf_mon_min": 1,
+        "neu_lymf_min": 1,
+        "neu_mon_min": 1,
+        "lymf_mon_max": 1,
+        "neu_lymf_max": 1,
+        "neu_mon_max": 1
+    }
+    """
+    queryset = Test.objects.all()
+    serializer_class = ChangeRefsSerializer
+
+    def update(self, request,  *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        type_name = instance.name
+        request_data = request.data
+
+        if type_name == "hematological_research":
+            change_hematological_refs(request_data, instance)
+        if type_name == "immune_status":
+            change_immune_refs(request_data, instance)
+        if type_name == "cytokine_status":
+            change_cytokine_refs(request_data, instance)
+        if type_name == "regeneration_type":
+            change_regeneration_refs(request_data, instance)
+
+        return Response(type_name)
 
 
 class AnalysisComparisonView(RetrieveAPIView):
