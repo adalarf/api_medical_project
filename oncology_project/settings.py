@@ -124,7 +124,7 @@ DATABASES = {
         'HOST': env("HOST"),
         'PORT': env("POST"),
         'OPTIONS': {
-            'sslmode': 'prefer',
+            'sslmode': 'verify-full',
             'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
         },
     }
