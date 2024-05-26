@@ -129,7 +129,7 @@ DATABASES = {
             # 'target_session_attrs': 'read-write',
             'ssl':
                 {
-                    'key': os.path.join(BASE_DIR, 'root.crt')
+                    'ca': os.path.join(BASE_DIR, 'root.crt')
                 }
         },
     }
