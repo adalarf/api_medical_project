@@ -124,9 +124,13 @@ DATABASES = {
         'HOST': env("HOST"),
         'PORT': env("POST"),
         'OPTIONS': {
-            'sslmode': 'verify-full',
-            'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
-            'target_session_attrs': 'read-write',
+            #'sslmode': 'verify-full',
+            # 'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
+            # 'target_session_attrs': 'read-write',
+            'ssl':
+                {
+                    'key': os.path.join(BASE_DIR, 'root.crt')
+                }
         },
     }
 }
