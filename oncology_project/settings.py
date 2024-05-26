@@ -122,7 +122,7 @@ DATABASES = {
         'USER': env("USER"),
         'PASSWORD': env("PASSWORD"),
         'HOST': env("HOST"),
-        'POST': env("POST"),
+        'PORT': env("POST"),
         'OPTIONS': {
             'sslmode': 'prefer',
             'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
