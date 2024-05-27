@@ -739,6 +739,9 @@ class GraphicCreateView(APIView):
 
 
 class GraphicView(RetrieveAPIView):
+    """
+    Эндпоинт для вывода ссылок графиков, в url передается id PatientTest
+    """
     serializer_class = GraphicSerializer
     queryset = PatientTests.objects.all()
 
@@ -747,8 +750,12 @@ class GraphicView(RetrieveAPIView):
         graphics = Graphic.objects.filter(patient_test_id=instance)
         serializer = self.get_serializer(graphics, many=True)
         data = serializer.data
+
+        tests = Test.objects.filter(patient_test_id=instance).values("id")
         for i in data:
             i['graphic'] = i['graphic'][28:]
+            i['test_name'] = i['graphic'].split('/')[2].split('.')[0][:-2]
+            i['test_id'] = tests.filter(name=i['test'])
         # for i in data:
         #     i['graphic'] = i['graphic'][0:28] + i['graphic'][34:]
 
