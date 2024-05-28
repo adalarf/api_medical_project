@@ -754,7 +754,7 @@ class GraphicView(RetrieveAPIView):
         tests = Test.objects.filter(patient_test_id=instance).values("id")
         for i in data:
             i['graphic'] = i['graphic'][28:]
-            i['test_name'] = i['graphic'].split('/')[2].split('.')[0][:-2]
+            i['test_name'] = '_'.join(i['graphic'].split('/')[2].split('.')[0].split('_')[:2])
             i['test_id'] = tests.filter(name=i['test_name'])
         # for i in data:
         #     i['graphic'] = i['graphic'][0:28] + i['graphic'][34:]
