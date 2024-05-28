@@ -755,7 +755,7 @@ class GraphicView(RetrieveAPIView):
         for i in data:
             i['graphic'] = i['graphic'][28:]
             i['test_name'] = i['graphic'].split('/')[2].split('.')[0][:-2]
-            i['test_id'] = tests.filter(name=i['test'])
+            i['test_id'] = tests.filter(name=i['test_name'])
         # for i in data:
         #     i['graphic'] = i['graphic'][0:28] + i['graphic'][34:]
 
