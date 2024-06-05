@@ -600,15 +600,41 @@ class ChangeRefsView(RetrieveUpdateAPIView):
         request_data = request.data
 
         if type_name == "hematological_research":
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            # patient_test = PatientTests.objects.filter(patient_id__id__in=patients,)
+            patient_tests = PatientTests.objects.filter(patient_id__id__in=patients, test__name="hematological_research"
+                                                       ).filter(test__name="immune_status").values_list("id", flat=True)
+            tests = Test.objects.filter(patient_test_id__in=patient_tests, name=type_name)
+            for test in tests:
+                change_hematological_refs(request_data, test)
             change_hematological_refs(request_data, instance)
         if type_name == "immune_status":
-            change_immune_refs(request_data, instance)
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            patient_tests = PatientTests.objects.filter(patient_id__id__in=patients, test__name="hematological_research"
+                                                        ).filter(test__name="immune_status").values_list("id",
+                                                                                                         flat=True)
+            tests = Test.objects.filter(patient_test_id__in=patient_tests, name=type_name)
+            for test in tests:
+                change_immune_refs(request_data, test)
+            # change_immune_refs(request_data, instance)
         if type_name == "cytokine_status":
-            change_cytokine_refs(request_data, instance)
-        if type_name == "regeneration_type":
-            change_regeneration_refs(request_data, instance)
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            tests = Test.objects.filter(patient_test_id__patient_id__id__in=patients, name=type_name)
+            for test in tests:
+                change_cytokine_refs(request_data, test)
+            # change_cytokine_refs(request_data, instance)
+        # if type_name == "regeneration_type":
+        #     instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+        #     patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+        #     tests = Test.objects.filter(patient_test_id__patient_id__id__in=patients, name=type_name)
+        #     for test in tests:
+        #         change_regeneration_refs(request_data, test)
+            # change_regeneration_refs(request_data, instance)
 
-        return Response(type_name)
+        return Response("Реф. значения изменены")
 
 
 class AnalysisComparisonView(RetrieveAPIView):
