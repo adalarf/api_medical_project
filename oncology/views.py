@@ -212,12 +212,25 @@ class TestsPatientView(APIView):
             }
 
             for test in patient_test.test_set.all():
-                patient_test_data["tests"].append({
-                    "id": test.pk,
-                    "name": test.name
-                })
-
-            data["patient_tests"].append(patient_test_data)
+                if test.name == "hematological_research":
+                    if patient_test.test_set.filter(name="immune_status").exists():
+                        patient_test_data["tests"].append({
+                            "id": test.pk,
+                            "name": test.name
+                        })
+                elif test.name == "immune_status":
+                    if patient_test.test_set.filter(name="hematological_research").exists():
+                        patient_test_data["tests"].append({
+                            "id": test.pk,
+                            "name": test.name
+                        })
+                else:
+                    patient_test_data["tests"].append({
+                        "id": test.pk,
+                        "name": test.name
+                    })
+            if patient_test_data["tests"]:
+                data["patient_tests"].append(patient_test_data)
 
         return Response(data)
 
@@ -271,6 +284,8 @@ class PatientTestsView(APIView):
             name = i['name']
             analysises = i['analysis']
             test = Test.objects.create(name=name, patient_test_id=patient_test)
+            if name == 'hematological_research':
+                regeneration_type_test = Test.objects.create(name='regeneration_type', patient_test_id=patient_test)
             for j in analysises:
                 value = j['value']
                 indicator_name = j['indicator_name']
@@ -279,6 +294,8 @@ class PatientTestsView(APIView):
                 except Indicator.DoesNotExist:
                     raise NotFound('Indicator не существует')
                 analysis = Analysis.objects.create(value=value, indicator_id=indicator, test_id=test)
+                if name == 'hematological_research':
+                    regeneration_type_analysis = Analysis.objects.create(value=value, indicator_id=indicator, test_id=regeneration_type_test)
 
         hematological_research_tests = Test.objects.filter(patient_test_id=patient_test,
                                                            name='hematological_research').first()
@@ -286,18 +303,20 @@ class PatientTestsView(APIView):
                                                            name='immune_status').first()
         cytokine_status_tests = Test.objects.filter(patient_test_id=patient_test,
                                                            name='cytokine_status').first()
-        if hematological_research_tests is not None:
+        regeneration_type_tests = Test.objects.filter(patient_test_id=patient_test,
+                                                           name='regeneration_type').first()
+        if regeneration_type_tests is not None:
             lymf_indicator = Indicator.objects.get(name='lymphocytes')
             mon_indicator = Indicator.objects.get(name='monocytes')
             neu_indicator = Indicator.objects.get(name='neutrophils')
-            lymf = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=lymf_indicator).value
-            mon = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=mon_indicator).value
-            neu = Analysis.objects.get(test_id=hematological_research_tests, indicator_id=neu_indicator).value
+            lymf = Analysis.objects.get(test_id=regeneration_type_tests, indicator_id=lymf_indicator).value
+            mon = Analysis.objects.get(test_id=regeneration_type_tests, indicator_id=mon_indicator).value
+            neu = Analysis.objects.get(test_id=regeneration_type_tests, indicator_id=neu_indicator).value
 
             regeneration_type_min = [Decimal(3.4), Decimal(1.89), Decimal(6.4)]
             regeneration_type_max = [Decimal(6.1), Decimal(2.1), Decimal(12.8)]
 
-            get_regeneration_type_result(hematological_research_tests,
+            get_regeneration_type_result(regeneration_type_tests,
                                          [lymf / mon, neu / lymf, neu / mon],
                                          regeneration_type_min,
                                          regeneration_type_max)
@@ -544,6 +563,46 @@ class ConclusionView(RetrieveUpdateAPIView):
     queryset = Test.objects.all()
     serializer_class = ConclusionSerializer
 
+    def update(self, request,  *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        type_name = instance.name
+        request_data = request.data
+        serializer_data = serializer.data
+        if type_name == "hematological_research":
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+
+            patient_tests = PatientTests.objects.filter(patient_id__id__in=patients, test__name="hematological_research"
+                                                        ).filter(test__name="immune_status").values_list("id",
+                                                                                                         flat=True)
+            tests = Test.objects.filter(patient_test_id__in=patient_tests, name=type_name)
+            for test in tests:
+                test.recommendations = request_data['recommendations']
+                test.conclusion = request_data['conclusion']
+                test.save()
+        elif type_name == "immune_status":
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            patient_tests = PatientTests.objects.filter(patient_id__id__in=patients, test__name="immune_status"
+                                                        ).filter(test__name="hematological_research").values_list("id",
+                                                                                                         flat=True)
+            tests = Test.objects.filter(patient_test_id__in=patient_tests, name=type_name)
+            for test in tests:
+                test.recommendations = request_data['recommendations']
+                test.conclusion = request_data['conclusion']
+                test.save()
+        else:
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            tests = Test.objects.filter(patient_test_id__patient_id__id__in=patients, name=type_name)
+            for test in tests:
+                test.recommendations = request_data['recommendations']
+                test.conclusion = request_data['conclusion']
+                test.save()
+        return Response(serializer_data)
+
 
 class ChangeRefsView(RetrieveUpdateAPIView):
     """
@@ -608,7 +667,7 @@ class ChangeRefsView(RetrieveUpdateAPIView):
             tests = Test.objects.filter(patient_test_id__in=patient_tests, name=type_name)
             for test in tests:
                 change_hematological_refs(request_data, test)
-            change_hematological_refs(request_data, instance)
+            # change_hematological_refs(request_data, instance)
         if type_name == "immune_status":
             instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
             patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
@@ -626,12 +685,12 @@ class ChangeRefsView(RetrieveUpdateAPIView):
             for test in tests:
                 change_cytokine_refs(request_data, test)
             # change_cytokine_refs(request_data, instance)
-        # if type_name == "regeneration_type":
-        #     instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
-        #     patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
-        #     tests = Test.objects.filter(patient_test_id__patient_id__id__in=patients, name=type_name)
-        #     for test in tests:
-        #         change_regeneration_refs(request_data, test)
+        if type_name == "regeneration_type":
+            instance_patient = Patient.objects.get(id=instance.patient_test_id.patient_id.id)
+            patients = Patient.objects.filter(diagnosis=instance_patient.diagnosis).values_list("id", flat=True)
+            tests = Test.objects.filter(patient_test_id__patient_id__id__in=patients, name=type_name)
+            for test in tests:
+                change_regeneration_refs(request_data, test)
             # change_regeneration_refs(request_data, instance)
 
         return Response("Реф. значения изменены")
