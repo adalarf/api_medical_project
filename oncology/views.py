@@ -94,6 +94,8 @@ class SubjectInfoPostView(GenericAPIView):
     subject_text - описание области применения
     """
     serializer_class = SubjectInfoSerializer
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -114,6 +116,11 @@ class SubjectInfoView(RetrieveUpdateDestroyAPIView):
     queryset = SubjectInfo.objects.all()
     serializer_class = SubjectInfoSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return []
+        else:
+            return [IsAuthenticated()]
 
 class SubjectListView(ListAPIView):
     """
@@ -130,6 +137,12 @@ class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
     """
     queryset = CopyrightInfo.objects.all()
     serializer_class = CopyrightInfoSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return []
+        else:
+            return [IsAuthenticated()]
 
     def retrieve(self, request, *args, **kwargs):
         instance = CopyrightInfo.objects.get(pk=kwargs['pk'])
@@ -167,11 +180,13 @@ class PatientEditView(RetrieveUpdateDestroyAPIView):
 class PatientInfoView(ListAPIView):
     queryset = Patient.objects.all()
     serializer_class = PatientInfoSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class IndicatorView(CreateAPIView):
     queryset = Indicator.objects.all()
     serializer_class = IndicatorSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class TestsPatientView(APIView):
@@ -195,6 +210,9 @@ class TestsPatientView(APIView):
        ]
     }
     """
+
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
         patient = Patient.objects.prefetch_related(
             Prefetch('patienttests_set', queryset=PatientTests.objects.prefetch_related('test_set'))
@@ -240,6 +258,9 @@ class PatientTestsView(APIView):
     """
     Эндпоинт для создания тестов пациента
     """
+
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=['analysis_date', 'test', 'patient_id'],
@@ -412,6 +433,9 @@ class PatientTestsEditView(APIView):
     """
     Эндпоинт для редактирования тестов пациента
     """
+
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=['analysis_date', 'test'],
@@ -534,6 +558,7 @@ class PatientAnalysisView(RetrieveAPIView):
     """
     serializer_class = TestNameSerializer
     queryset = Test.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -562,6 +587,7 @@ class ConclusionView(RetrieveUpdateAPIView):
     """
     queryset = Test.objects.all()
     serializer_class = ConclusionSerializer
+    permission_classes = [IsAuthenticated]
 
     def update(self, request,  *args, **kwargs):
         instance = self.get_object()
@@ -650,6 +676,7 @@ class ChangeRefsView(RetrieveUpdateAPIView):
     """
     queryset = Test.objects.all()
     serializer_class = ChangeRefsSerializer
+    permission_classes = [IsAuthenticated]
 
     def update(self, request,  *args, **kwargs):
         instance = self.get_object()
@@ -713,6 +740,7 @@ class AnalysisComparisonView(RetrieveAPIView):
     ]
     """
     queryset = Test.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -781,9 +809,9 @@ class AnalysisComparisonView(RetrieveAPIView):
         return Response(data)
 
 
-
 class SearchPatientView(GenericAPIView):
     serializer_class = SearchPatientSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -829,6 +857,7 @@ class GraphicView(RetrieveAPIView):
     """
     serializer_class = GraphicSerializer
     queryset = PatientTests.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
