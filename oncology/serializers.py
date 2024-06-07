@@ -184,10 +184,17 @@ class PatientTestsSerializer(serializers.ModelSerializer):
 
 
 class SearchPatientSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    patronymic = serializers.CharField(required=False)
-    birth_date = serializers.DateField(required=False)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    patronymic = serializers.CharField(required=False, allow_blank=True)
+    birth_date = serializers.DateField(required=False, allow_null=True, default='', input_formats=['%Y-%m-%d', ''])
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret['birth_date'] == '1900-01-01':
+            ret['birth_date'] = ''
+        return ret
+
     class Meta:
         model = Patient
         fields = ('first_name', 'last_name', 'patronymic', 'birth_date',)
