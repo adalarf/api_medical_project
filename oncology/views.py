@@ -230,25 +230,13 @@ class TestsPatientView(APIView):
             }
 
             for test in patient_test.test_set.all():
-                if test.name == "hematological_research":
-                    if patient_test.test_set.filter(name="immune_status").exists():
-                        patient_test_data["tests"].append({
-                            "id": test.pk,
-                            "name": test.name
-                        })
-                elif test.name == "immune_status":
-                    if patient_test.test_set.filter(name="hematological_research").exists():
-                        patient_test_data["tests"].append({
-                            "id": test.pk,
-                            "name": test.name
-                        })
-                else:
+                if test.name != "regeneration_type":
                     patient_test_data["tests"].append({
                         "id": test.pk,
                         "name": test.name
                     })
-            if patient_test_data["tests"]:
-                data["patient_tests"].append(patient_test_data)
+
+            data["patient_tests"].append(patient_test_data)
 
         return Response(data)
 
