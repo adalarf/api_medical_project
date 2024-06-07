@@ -42,6 +42,8 @@ urlpatterns = [
 
     path('api/v1/patient-test-edit/<int:pk>/', views.PatientTestsEditView.as_view()),
 
+    path('api/v1/patient-operation-info/<int:pk>/', views.OperationInfoView.as_view()),
+
     path('api/v1/graphic-create/', views.GraphicCreateView.as_view()),
     path('api/v1/graphic/<int:pk>/', views.GraphicView.as_view()),
 

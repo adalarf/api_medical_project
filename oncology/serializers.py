@@ -45,13 +45,27 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         # exclude = ('id', )
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ('diagnosis_date', 'chemoterapy',)
 
 
 class PatientInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ('id', 'first_name', 'last_name', 'patronymic', 'birth_date',)
+
+
+class PatientOperationSerializer(serializers.ModelSerializer):
+    diagnosis = serializers.CharField(required=False)
+    diagnosis_comment = serializers.CharField(required=False)
+    diagnosis_date = serializers.DateField(required=False)
+    operation_comment = serializers.CharField(required=False)
+    chemoterapy = serializers.CharField(required=False)
+    chemoterapy_comment = serializers.CharField(required=False)
+    class Meta:
+        model = Patient
+        fields = ('diagnosis', 'diagnosis_comment', 'diagnosis_date',  'operation_comment', 'chemoterapy',
+                  'chemoterapy_comment')
 
 
 class IndicatorSerializer(serializers.ModelSerializer):

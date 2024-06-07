@@ -13,7 +13,7 @@ from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Indicator, Test
 from .serializers import SubjectInfoSerializer, CopyrightInfoSerializer, PatientSerializer, SubjectListSerializer,\
     PatientTestsSerializer, IndicatorSerializer, TestSerializer, GraphicSerializer, PatientInfoSerializer,\
     AnalysisSerializer, AnalysisWithReferentValuesSerializer, TestNameSerializer, SearchPatientSerializer,\
-    ConclusionSerializer, ChangeRefsSerializer
+    ConclusionSerializer, ChangeRefsSerializer, PatientOperationSerializer
 from datetime import datetime
 from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
@@ -795,6 +795,15 @@ class AnalysisComparisonView(RetrieveAPIView):
                 data['analysis'].append(res)
 
         return Response(data)
+
+
+class OperationInfoView(RetrieveUpdateAPIView):
+    """
+    Эндпоинт для вывода/редактирования информации с операцией. В заголовке передается id пациента
+    """
+    queryset = Patient.objects.all()
+    serializer_class = PatientOperationSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class SearchPatientView(GenericAPIView):

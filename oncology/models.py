@@ -66,6 +66,8 @@ class Patient(models.Model):
     patronymic = models.CharField(max_length=255)
     birth_date = models.DateField(validators=[validate_date])
     diagnosis = models.CharField(max_length=255)
+    diagnosis_date = models.DateField(null=True, blank=True)
+    chemoterapy = models.CharField(max_length=255, null=True, blank=True)
     region = models.CharField(max_length=255)
     diagnosis_comment = models.TextField(null=True, blank=True)
     operation_comment = models.TextField(null=True, blank=True)
