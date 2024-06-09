@@ -43,11 +43,21 @@ def draw_values(angles, values, values_not_scaled, ax):
                     arrowprops=dict(arrowstyle="->", color='black'))
 
 
-def save_graphic(fig, graphic_name, patient_test):
-    if Graphic.objects.exists():
-        latest_graphic_id = Graphic.objects.latest('pk').pk + 1
-    else:
+def save_graphic(fig, graphic_name, patient_test, latest_graphic_id=None):
+    # if Graphic.objects.exists():
+    #     latest_graphic_id = Graphic.objects.latest('pk').pk + 1
+    # else:
+    #     latest_graphic_id = 1
+    if latest_graphic_id is None:
         latest_graphic_id = 1
+        if Graphic.objects.exists():
+            latest_graphic_id = Graphic.objects.latest('pk').pk + 1
+
+
+    # if not Graphic.objects.exists():
+    #     latest_graphic_id = 1
+    # elif not latest_graphic_id:
+    #     latest_graphic_id = Graphic.objects.latest('pk').pk + 1
     # file_path = f'media/{graphic_name}_{latest_graphic_id}.png'
     file_path = f'{graphic_name}_{latest_graphic_id}.png'
     canvas = FigureCanvasAgg(fig)
@@ -61,7 +71,7 @@ def save_graphic(fig, graphic_name, patient_test):
                       region_name=settings.AWS_S3_REGION_NAME)
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME
     s3.upload_fileobj(buffer, bucket_name, file_path)
-    graphic_instance = Graphic.objects.create(graphic=file_path, patient_test_id=patient_test)
+    graphic_instance = Graphic.objects.create(id=latest_graphic_id, graphic=file_path, patient_test_id=patient_test)
 
     return graphic_instance.id
 
@@ -92,7 +102,7 @@ def draw_scaled_marks(*mark_values):
         plt.text(mark[0], mark[1], mark[2], fontsize=8, color='black', ha='center')
 
 
-def draw_hematological_research(values, patient_test):
+def draw_hematological_research(values, patient_test, latest_graphic_id=None):
     labels = np.array(['CD19/CD4', 'LYMF/CD19', 'NEU/LYMF', 'CD19/CD8'])
     values_not_scaled = make_usable_values(values)
     values_scaled = [values[0] / Decimal(0.2), values[1] / Decimal(2), values[2] / Decimal(0.4), values[3] / Decimal(0.2)]
@@ -139,12 +149,12 @@ def draw_hematological_research(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic(fig, 'hematological_research', patient_test)
+    graphic = save_graphic(fig, 'hematological_research', patient_test, latest_graphic_id)
 
     return graphic
 
 
-def draw_immune_status(values, patient_test):
+def draw_immune_status(values, patient_test, latest_graphic_id=None):
     labels = np.array(['NEU/CD4', 'NEU/CD3', 'NEU/LYMF', 'NEU/CD8'])
     values_not_scaled = make_usable_values(values)
     values_scaled = [values[0] / Decimal(1.0), values[1] / Decimal(0.8), values[2] / Decimal(0.4),
@@ -194,12 +204,12 @@ def draw_immune_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic(fig, 'immune_status', patient_test)
+    graphic = save_graphic(fig, 'immune_status', patient_test, latest_graphic_id)
 
     return graphic
 
 
-def draw_cytokine_status(values, patient_test):
+def draw_cytokine_status(values, patient_test, latest_graphic_id=None):
     labels = np.array(['Интерликин', 'ФНО', 'Интерферон'])
     values_not_scaled = make_usable_values(values)
     values_scaled = [values[0] / Decimal(24.0), values[1] / Decimal(24.0), values[2] / Decimal(24.0)]
@@ -264,13 +274,13 @@ def draw_cytokine_status(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic(fig, 'cytokine_status', patient_test)
+    graphic = save_graphic(fig, 'cytokine_status', patient_test, latest_graphic_id)
 
     return graphic
 
 
 
-def draw_regeneration_type(values, patient_test):
+def draw_regeneration_type(values, patient_test, latest_graphic_id=None):
     labels = np.array(['Лимфоциты/моноциты', 'Нейтрофилы/лимфоциты', 'Нейтрофилы/моноциты'])
     values_not_scaled = make_usable_values(values)
     values_scaled = [values[0] / Decimal(28.5), values[1] / Decimal(0.58), values[2] / Decimal(42.8)]
@@ -333,13 +343,13 @@ def draw_regeneration_type(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic(fig, 'regeneration_type', patient_test)
+    graphic = save_graphic(fig, 'regeneration_type', patient_test, latest_graphic_id)
 
     return graphic
 
 
 
-def draw_regeneration_type1(values, patient_test):
+def draw_regeneration_type1(values, patient_test, latest_graphic_id=None):
     labels = np.array(['Лимфоциты/моноциты', 'Нейтрофилы/лимфоциты', 'Нейтрофилы/моноциты'])
     values_not_scaled = make_usable_values(values)
     values_scaled = [values[0] / Decimal(2), values[1] / Decimal(0.58), values[2] / Decimal(3)]
@@ -390,7 +400,7 @@ def draw_regeneration_type1(values, patient_test):
     labels_l = ('Результаты', 'Нижние референтные значения', 'Верхние референтные значения')
     ax.legend(labels_l, labelspacing=0.1, fontsize='small')
 
-    graphic = save_graphic(fig, 'regeneration_type', patient_test)
+    graphic = save_graphic(fig, 'regeneration_type', patient_test, latest_graphic_id)
 
     return graphic
 

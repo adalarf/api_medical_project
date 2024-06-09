@@ -25,6 +25,7 @@ from django.db.models import Q
 from django.db.models import Avg
 from decimal import Decimal
 from .test_utils import change_hematological_refs, change_immune_refs, change_cytokine_refs, change_regeneration_refs
+import boto3
 
 
 class DoctorSignupView(GenericAPIView):
@@ -478,6 +479,225 @@ class PatientTestsEditView(APIView):
                 except Indicator.DoesNotExist:
                     raise NotFound('Indicator не существует')
                 Analysis.objects.filter(indicator_id=indicator, test_id=test).update(value=value)
+
+
+            # graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id).id
+
+            if name == "hematological_research":
+                regeneration_type_test = Test.objects.filter(name='regeneration_type', patient_test_id=patient_test).first()
+                if not regeneration_type_test:
+                    regeneration_type_test = test
+                lymf_indicator = Indicator.objects.get(name='lymphocytes')
+                mon_indicator = Indicator.objects.get(name='monocytes')
+                neu_indicator = Indicator.objects.get(name='neutrophils')
+                lymf = Analysis.objects.get(test_id=test, indicator_id=lymf_indicator).value
+                mon = Analysis.objects.get(test_id=test, indicator_id=mon_indicator).value
+                neu = Analysis.objects.get(test_id=test, indicator_id=neu_indicator).value
+
+                regeneration_type_min = [Decimal(3.4), Decimal(1.89), Decimal(6.4)]
+                regeneration_type_max = [Decimal(6.1), Decimal(2.1), Decimal(12.8)]
+
+                get_regeneration_type_result(regeneration_type_test,
+                                             [lymf / mon, neu / lymf, neu / mon],
+                                             regeneration_type_min,
+                                             regeneration_type_max)
+
+
+
+                graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id,
+                                                  graphic__startswith='regeneration_type').id
+                graphics_to_delete = Graphic.objects.filter(patient_test_id=test.patient_test_id,
+                                                            graphic__startswith='regeneration_type')
+                for graphic in graphics_to_delete:
+                    s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                      endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                                      region_name=settings.AWS_S3_REGION_NAME)
+                    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+                    s3.delete_object(Bucket=bucket_name, Key=graphic.graphic.name)
+
+                graphics_to_delete.delete()
+
+                draw_regeneration_type1([lymf / mon, neu / lymf, neu / mon], patient_test, graphic_id)
+
+
+
+                immune_status_tests = Test.objects.filter(name='immune_status', patient_test_id=patient_test).first()
+                if immune_status_tests:
+                    lymf_indicator = Indicator.objects.get(name='lymphocytes')
+                    cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
+                    neu_indicator = Indicator.objects.get(name='neutrophils')
+                    cd4_indicator = Indicator.objects.get(name='t_helpers')
+                    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+                    cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
+                    lymf = Analysis.objects.get(test_id=test, indicator_id=lymf_indicator).value
+                    neu = Analysis.objects.get(test_id=test, indicator_id=neu_indicator).value
+                    cd19 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd19_indicator).value
+                    cd4 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd4_indicator).value
+                    cd8 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd8_indicator).value
+                    cd3 = Analysis.objects.get(test_id=immune_status_tests, indicator_id=cd3_indicator).value
+
+                    hematological_research_min, hematological_research_max = get_refs(
+                        [(cd19_indicator, cd4_indicator, None),
+                         (lymf_indicator, cd19_indicator, None),
+                         (neu_indicator, lymf_indicator, None),
+                         (cd19_indicator, cd8_indicator, None)])
+
+                    immune_status_min, immune_status_max = get_refs([(neu_indicator, cd4_indicator, None),
+                                                                     (neu_indicator, cd3_indicator, None),
+                                                                     (neu_indicator, lymf_indicator, None),
+                                                                     (neu_indicator, cd8_indicator, None)])
+
+
+                    get_hematological_research_result(test,
+                                                      [(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                                      hematological_research_min, hematological_research_max)
+
+                    get_immune_status_result(immune_status_tests,
+                                             [neu / cd4, neu / cd3, neu / lymf, neu / cd8],
+                                             immune_status_min, immune_status_max)
+
+                    # hematological_test = Test.objects.get(patient_test_id=patient_test, name='hematological_research')
+                    # graphics = Graphic.objects.filter(patient_test_id=test.patient_test_id)
+                    # graphic_type_name = ['_'.join(str(j.graphic).split('_')[0:2]) for j in graphics]
+                    # graphics_hematological = list(filter(lambda x: x == 'hematological_research', graphic_type_name))
+
+                    graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id, graphic__startswith='hematological_research').id
+                    immune_graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id,
+                                                     graphic__startswith='immune_status').id
+                    Graphic.objects.filter(Q(patient_test_id=test.patient_test_id),
+                                        Q(graphic__startswith='hematological_research') | Q(graphic__startswith='immune_status')).delete()
+                    graphics_to_delete = Graphic.objects.filter(Q(patient_test_id=test.patient_test_id),
+                                                                Q(graphic__startswith='hematological_research') | Q(graphic__startswith='immune_status'))
+                    for graphic in graphics_to_delete:
+                        s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                          endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                                          region_name=settings.AWS_S3_REGION_NAME)
+                        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+                        s3.delete_object(Bucket=bucket_name, Key=graphic.graphic.name)
+                    # Удаление объектов Graphic
+                    graphics_to_delete.delete()
+
+                    draw_hematological_research([(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                                patient_test, graphic_id)
+
+                    draw_immune_status([neu / cd4, neu / cd3, neu / lymf, neu / cd8], patient_test, immune_graphic_id)
+
+            if name == "immune_status":
+                hematological_research_tests = Test.objects.filter(name='hematological_research',
+                                                              patient_test_id=patient_test).first()
+                if hematological_research_tests:
+                    lymf_indicator = Indicator.objects.get(name='lymphocytes')
+                    cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
+                    neu_indicator = Indicator.objects.get(name='neutrophils')
+                    cd4_indicator = Indicator.objects.get(name='t_helpers')
+                    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+                    cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
+                    lymf = Analysis.objects.get(test_id=hematological_research_tests,
+                                                    indicator_id=lymf_indicator).value
+                    neu = Analysis.objects.get(test_id=hematological_research_tests,
+                                                   indicator_id=neu_indicator).value
+                    cd19 = Analysis.objects.get(test_id=test, indicator_id=cd19_indicator).value
+                    cd4 = Analysis.objects.get(test_id=test, indicator_id=cd4_indicator).value
+                    cd8 = Analysis.objects.get(test_id=test, indicator_id=cd8_indicator).value
+                    cd3 = Analysis.objects.get(test_id=test, indicator_id=cd3_indicator).value
+
+                    immune_status_min, immune_status_max = get_refs([(neu_indicator, cd4_indicator, None),
+                                                                         (neu_indicator, cd3_indicator, None),
+                                                                         (neu_indicator, lymf_indicator, None),
+                                                                         (neu_indicator, cd8_indicator, None)])
+
+                    hematological_research_min, hematological_research_max = get_refs(
+                        [(cd19_indicator, cd4_indicator, None),
+                         (lymf_indicator, cd19_indicator, None),
+                         (neu_indicator, lymf_indicator, None),
+                         (cd19_indicator, cd8_indicator, None)])
+
+                    get_immune_status_result(test,
+                                                 [neu / cd4, neu / cd3, neu / lymf, neu / cd8],
+                                                 immune_status_min, immune_status_max)
+
+                    get_hematological_research_result(hematological_research_tests,
+                                                      [(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                                      hematological_research_min, hematological_research_max)
+
+
+                    graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id,
+                                                         graphic__startswith='immune_status').id
+                    hematological_graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id,
+                                                            graphic__startswith='hematological_research').id
+                    Graphic.objects.filter(Q(patient_test_id=test.patient_test_id),
+                                           Q(graphic__startswith='immune_status') | Q(
+                                               graphic__startswith='hematological_research')).delete()
+                    graphics_to_delete = Graphic.objects.filter(Q(patient_test_id=test.patient_test_id),
+                                                                Q(graphic__startswith='immune_status') | Q(
+                                                                    graphic__startswith='hematological_research'))
+                    for graphic in graphics_to_delete:
+                        s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                              aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                              endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                                              region_name=settings.AWS_S3_REGION_NAME)
+                        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+                        s3.delete_object(Bucket=bucket_name, Key=graphic.graphic.name)
+
+                    graphics_to_delete.delete()
+
+                    draw_immune_status([neu / cd4, neu / cd3, neu / lymf, neu / cd8], patient_test, graphic_id)
+                    draw_hematological_research([(cd19 / cd4), (lymf / cd19), (neu / lymf), (cd19 / cd8)],
+                                                patient_test, hematological_graphic_id)
+
+            if name == 'cytokine_status':
+                cd3_il2_stimulated_indicator = Indicator.objects.get(name='cd3_il2_stimulated')
+                cd3_il2_spontaneous_indicator = Indicator.objects.get(name='cd3_il2_spontaneous')
+
+                cd3_tnfa_stimulated_indicator = Indicator.objects.get(name='cd3_tnfa_stimulated')
+                cd3_tnfa_spontaneous_indicator = Indicator.objects.get(name='cd3_tnfa_spontaneous')
+
+                cd3_ifny_stimulated_indicator = Indicator.objects.get(name='cd3_ifny_stimulated')
+                cd3_ifny_spontaneous_indicator = Indicator.objects.get(name='cd3_ifny_spontaneous')
+
+                cd3_il2_stimulated = Analysis.objects.get(test_id=test,
+                                                                  indicator_id=cd3_il2_stimulated_indicator).value
+                cd3_il2_spontaneous = Analysis.objects.get(test_id=test,
+                                                                   indicator_id=cd3_il2_spontaneous_indicator).value
+                cd3_tnfa_stimulated = Analysis.objects.get(test_id=test,
+                                                                   indicator_id=cd3_tnfa_stimulated_indicator).value
+                cd3_tnfa_spontaneous = Analysis.objects.get(test_id=test,
+                                                                    indicator_id=cd3_tnfa_spontaneous_indicator).value
+                cd3_ifny_stimulated = Analysis.objects.get(test_id=test,
+                                                                   indicator_id=cd3_ifny_stimulated_indicator).value
+                cd3_ifny_spontaneous = Analysis.objects.get(test_id=test,
+                                                                    indicator_id=cd3_ifny_spontaneous_indicator).value
+
+                cytokine_status_min = [80, 80, 80]
+                cytokine_status_max = [120, 120, 120]
+
+                get_cytokine_status_result(test,
+                                                   [cd3_il2_stimulated / cd3_il2_spontaneous,
+                                                    cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
+                                                    cd3_ifny_stimulated / cd3_ifny_spontaneous],
+                                                   cytokine_status_min,
+                                                   cytokine_status_max)
+
+
+                graphic_id = Graphic.objects.get(patient_test_id=test.patient_test_id,
+                                                         graphic__startswith='cytokine_status').id
+                graphics_to_delete = Graphic.objects.filter(patient_test_id=test.patient_test_id,
+                                                                    graphic__startswith='cytokine_status')
+                for graphic in graphics_to_delete:
+                    s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                              aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                              endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                                              region_name=settings.AWS_S3_REGION_NAME)
+                    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+                    s3.delete_object(Bucket=bucket_name, Key=graphic.graphic.name)
+
+                graphics_to_delete.delete()
+
+                draw_cytokine_status([cd3_il2_stimulated / cd3_il2_spontaneous,
+                                              cd3_tnfa_stimulated / cd3_tnfa_spontaneous,
+                                              cd3_ifny_stimulated / cd3_ifny_spontaneous], patient_test, graphic_id)
 
         return Response('Анализ изменён')
 

@@ -119,10 +119,10 @@ DATABASES = {
     'default': {
         'ENGINE': env("ENGINE"),
         'NAME': env("NAME"),
-        'USER': env("USERNAME"),
+        'USER': env("USER"),
         'PASSWORD': env("PASSWORD"),
         'HOST': env("HOST"),
-        'PORT': env("POST"),
+        'POST': env("POST"),
         'OPTIONS': {
             #'sslmode': 'verify-full',
             # 'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
