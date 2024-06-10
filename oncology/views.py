@@ -970,14 +970,14 @@ class AnalysisComparisonView(RetrieveAPIView):
                                                              Q(analysis_date__month__in=[8, 9, 10, 11, 12, 1])) \
                 .values('id')
 
-        tests_prev = Test.objects.filter(patient_test_id__in=patient_tests_prev) \
+        tests_prev = Test.objects.filter(patient_test_id__in=patient_tests_prev).exclude(name='regeneration_type') \
             .values('id')
 
         analysises_prev = Analysis.objects.filter(test_id__in=tests_prev)
 
         data['analysis'] = []
 
-        tests = Test.objects.filter(patient_test_id=instance.patient_test_id).values('id')
+        tests = Test.objects.filter(patient_test_id=instance.patient_test_id).values('id').exclude(name='regeneration_type')
         analysises = Analysis.objects.filter(test_id__in=tests).values('id', 'indicator_id__name',
                                                                        'value', 'indicator_id__unit',
                                                                        'indicator_id__interval_min',
@@ -1051,7 +1051,7 @@ class SearchPatientView(GenericAPIView):
 
         patients = Patient.objects.filter(filters).values('id', 'first_name', 'last_name', 'patronymic', 'birth_date')
         if not patients:
-            return Response('Пациент с такими данными не найден')
+            return Response({'error': 'Пациент с такими данными не найден'})
 
         data = [{'id': patient['id'],
                  'first_name': patient['first_name'],
