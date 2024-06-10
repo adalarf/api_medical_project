@@ -1028,7 +1028,7 @@ class OperationInfoView(RetrieveUpdateAPIView):
 
 class SearchPatientView(GenericAPIView):
     serializer_class = SearchPatientSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
