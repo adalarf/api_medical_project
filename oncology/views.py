@@ -1050,6 +1050,8 @@ class SearchPatientView(GenericAPIView):
             filters &= Q(birth_date=birth_date)
 
         patients = Patient.objects.filter(filters).values('id', 'first_name', 'last_name', 'patronymic', 'birth_date')
+        if not patients:
+            return Response('Пациент с такими данными не найден')
 
         data = [{'id': patient['id'],
                  'first_name': patient['first_name'],
