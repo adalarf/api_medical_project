@@ -1028,7 +1028,7 @@ class OperationInfoView(RetrieveUpdateAPIView):
 
 class SearchPatientView(GenericAPIView):
     serializer_class = SearchPatientSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -1051,7 +1051,7 @@ class SearchPatientView(GenericAPIView):
 
         patients = Patient.objects.filter(filters).values('id', 'first_name', 'last_name', 'patronymic', 'birth_date')
         if not patients:
-            return Response({'error': ['Пациент с такими данными не найден']})
+            return Response([{'error': 'Пациент с такими данными не найден'}])
 
         data = [{'id': patient['id'],
                  'first_name': patient['first_name'],
