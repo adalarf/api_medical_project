@@ -15,51 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from oncology import views
+from django.urls import path, include
 from .yasg import urlpatterns as doc_urls
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/signup/', views.DoctorSignupView.as_view()),
-    path('api/v1/login/', views.DoctorLoginView.as_view()),
-    path('api/v1/logout/', views.LogoutView.as_view()),
-    path('api/v1/profile/', views.DoctorProfileView.as_view()),
-
-    path('api/v1/add-subject-info/', views.SubjectInfoPostView.as_view()),
-    path('api/v1/subject-info/<int:pk>/', views.SubjectInfoView.as_view()),
-    path('api/v1/subject-info/', views.SubjectListView.as_view()),
-    path('api/v1/copyright-info/', views.CopyrightInfoView.as_view(), kwargs={'pk': 1}),
-
-    path('api/v1/create-patient/', views.PatientCreationView.as_view()),
-    path('api/v1/edit-patient/<int:pk>/', views.PatientEditView.as_view()),
-
-    path('api/v1/indicator/', views.IndicatorView.as_view()),
-
-    path('api/v1/patient-test/', views.PatientTestsView.as_view()),
-
-    path('api/v1/patient-test-edit/<int:pk>/', views.PatientTestsEditView.as_view()),
-
-    path('api/v1/patient-operation-info/<int:pk>/', views.OperationInfoView.as_view()),
-
-    path('api/v1/graphic-create/', views.GraphicCreateView.as_view()),
-    path('api/v1/graphic/<int:pk>/', views.GraphicView.as_view()),
-
-    path('api/v1/patients-info/', views.PatientInfoView.as_view()),
-
-    path('api/v1/test-patient/<int:pk>/', views.TestsPatientView.as_view()),
-
-    path('api/v1/patient-analysis/<int:pk>/', views.PatientAnalysisView.as_view()),
-
-    path('api/v1/search-patient/', views.SearchPatientView.as_view()),
-
-    path('api/v1/analysis-comparison/<int:pk>/', views.AnalysisComparisonView.as_view()),
-
-    path('api/v1/conclusion/<int:pk>/', views.ConclusionView.as_view()),
-
-    path('api/v1/change-refs/<int:pk>/', views.ChangeRefsView.as_view()),
+    path('api/v1/', include('oncology.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += doc_urls

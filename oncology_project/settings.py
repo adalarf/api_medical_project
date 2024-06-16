@@ -119,14 +119,11 @@ DATABASES = {
     'default': {
         'ENGINE': env("ENGINE"),
         'NAME': env("NAME"),
-        'USER': env("USERNAME"),
+        'USER': env("USERNAME"), # to local launch switch "USERNAME" to "USER"
         'PASSWORD': env("PASSWORD"),
         'HOST': env("HOST"),
-        'PORT': env("POST"),
+        'PORT': env("POST"), # to local launch switch "PORT" to "POST"
         'OPTIONS': {
-            #'sslmode': 'verify-full',
-            # 'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
-            # 'target_session_attrs': 'read-write',
             'ssl':
                 {
                     'ca': os.path.join(BASE_DIR, 'root.crt')
