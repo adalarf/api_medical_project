@@ -4,11 +4,11 @@ from .graphic_service import get_refs
 
 
 def get_hematological_indicators():
-    lymf_indicator = Indicator.objects.get(name='lymphocytes')
-    cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
-    neu_indicator = Indicator.objects.get(name='neutrophils')
-    cd4_indicator = Indicator.objects.get(name='t_helpers')
-    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
+    lymf_indicator = Indicator.objects.get(name="lymphocytes")
+    cd19_indicator = Indicator.objects.get(name="b_lymphocytes")
+    neu_indicator = Indicator.objects.get(name="neutrophils")
+    cd4_indicator = Indicator.objects.get(name="t_helpers")
+    cd8_indicator = Indicator.objects.get(name="t_cytotoxic_lymphocytes")
 
     hematological_indicators = {
         "lymf_indicator": lymf_indicator,
@@ -22,11 +22,11 @@ def get_hematological_indicators():
 
 
 def get_immune_indicators():
-    lymf_indicator = Indicator.objects.get(name='lymphocytes')
-    neu_indicator = Indicator.objects.get(name='neutrophils')
-    cd4_indicator = Indicator.objects.get(name='t_helpers')
-    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
-    cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
+    lymf_indicator = Indicator.objects.get(name="lymphocytes")
+    neu_indicator = Indicator.objects.get(name="neutrophils")
+    cd4_indicator = Indicator.objects.get(name="t_helpers")
+    cd8_indicator = Indicator.objects.get(name="t_cytotoxic_lymphocytes")
+    cd3_indicator = Indicator.objects.get(name="t_lymphocytes")
 
     immune_indicators = {
         "lymf_indicator": lymf_indicator,
@@ -40,12 +40,12 @@ def get_immune_indicators():
 
 
 def get_hematological_and_immune_indicators():
-    lymf_indicator = Indicator.objects.get(name='lymphocytes')
-    cd19_indicator = Indicator.objects.get(name='b_lymphocytes')
-    neu_indicator = Indicator.objects.get(name='neutrophils')
-    cd4_indicator = Indicator.objects.get(name='t_helpers')
-    cd8_indicator = Indicator.objects.get(name='t_cytotoxic_lymphocytes')
-    cd3_indicator = Indicator.objects.get(name='t_lymphocytes')
+    lymf_indicator = Indicator.objects.get(name="lymphocytes")
+    cd19_indicator = Indicator.objects.get(name="b_lymphocytes")
+    neu_indicator = Indicator.objects.get(name="neutrophils")
+    cd4_indicator = Indicator.objects.get(name="t_helpers")
+    cd8_indicator = Indicator.objects.get(name="t_cytotoxic_lymphocytes")
+    cd3_indicator = Indicator.objects.get(name="t_lymphocytes")
 
     hematological_and_immune_indicators = {
         "lymf_indicator": lymf_indicator,
@@ -60,9 +60,9 @@ def get_hematological_and_immune_indicators():
 
 
 def get_regeneration_indicators():
-    lymf_indicator = Indicator.objects.get(name='lymphocytes')
-    mon_indicator = Indicator.objects.get(name='monocytes')
-    neu_indicator = Indicator.objects.get(name='neutrophils')
+    lymf_indicator = Indicator.objects.get(name="lymphocytes")
+    mon_indicator = Indicator.objects.get(name="monocytes")
+    neu_indicator = Indicator.objects.get(name="neutrophils")
 
     regeneration_indicators = {
         "lymf_indicator": lymf_indicator,
@@ -74,12 +74,12 @@ def get_regeneration_indicators():
 
 
 def get_cytokine_indicators():
-    cd3_il2_stimulated_indicator = Indicator.objects.get(name='cd3_il2_stimulated')
-    cd3_il2_spontaneous_indicator = Indicator.objects.get(name='cd3_il2_spontaneous')
-    cd3_tnfa_stimulated_indicator = Indicator.objects.get(name='cd3_tnfa_stimulated')
-    cd3_tnfa_spontaneous_indicator = Indicator.objects.get(name='cd3_tnfa_spontaneous')
-    cd3_ifny_stimulated_indicator = Indicator.objects.get(name='cd3_ifny_stimulated')
-    cd3_ifny_spontaneous_indicator = Indicator.objects.get(name='cd3_ifny_spontaneous')
+    cd3_il2_stimulated_indicator = Indicator.objects.get(name="cd3_il2_stimulated")
+    cd3_il2_spontaneous_indicator = Indicator.objects.get(name="cd3_il2_spontaneous")
+    cd3_tnfa_stimulated_indicator = Indicator.objects.get(name="cd3_tnfa_stimulated")
+    cd3_tnfa_spontaneous_indicator = Indicator.objects.get(name="cd3_tnfa_spontaneous")
+    cd3_ifny_stimulated_indicator = Indicator.objects.get(name="cd3_ifny_stimulated")
+    cd3_ifny_spontaneous_indicator = Indicator.objects.get(name="cd3_ifny_spontaneous")
 
     cytokine_indicators = {
         "cd3_il2_stimulated_indicator": cd3_il2_stimulated_indicator,
@@ -94,12 +94,12 @@ def get_cytokine_indicators():
 
 
 def get_value_and_indicator(j):
-    value = j['value']
-    indicator_name = j['indicator_name']
+    value = j["value"]
+    indicator_name = j["indicator_name"]
     try:
         indicator = Indicator.objects.get(name=indicator_name)
     except Indicator.DoesNotExist:
-        raise NotFound('Indicator не существует')
+        raise NotFound("Indicator не существует")
 
     return value, indicator
 

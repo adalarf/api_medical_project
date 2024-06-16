@@ -31,7 +31,6 @@ def get_hematological_and_immune_analysis(hematological_research_tests, immune_s
     cd3 = Analysis.objects.get(test_id=immune_status_tests,
                                indicator_id=hematological_and_immune_indicators["cd3_indicator"]).value
 
-
     hematological_analysis = [cd19 / cd4, lymf / cd19, neu / lymf, cd19 / cd8]
     immune_analysis = [neu / cd4, neu / cd3, neu / lymf, neu / cd8]
 
@@ -73,56 +72,56 @@ def get_analysises_by_test_id(test_id):
 
 
 def get_analysises_and_analysis_prev_by_test_id(instance, patient_test_date):
-    season = str(patient_test_date).split('-')[1]
-    if season in ['02', '03', '04', '05', '06', '07']:
+    season = str(patient_test_date).split("-")[1]
+    if season in ["02", "03", "04", "05", "06", "07"]:
         patient_tests_prev = get_patient_tests_by_patient_id_and_analysis_date(instance, [2, 3, 4, 5, 6, 7])
     else:
         patient_tests_prev = get_patient_tests_by_patient_id_and_analysis_date(instance, [8, 9, 10, 11, 12, 1])
 
-    tests_prev = Test.objects.filter(patient_test_id__in=patient_tests_prev).exclude(name='regeneration_type') \
-        .values('id')
+    tests_prev = Test.objects.filter(patient_test_id__in=patient_tests_prev).exclude(name="regeneration_type") \
+        .values("id")
 
     analysises_prev = Analysis.objects.filter(test_id__in=tests_prev)
 
-    tests = Test.objects.filter(patient_test_id=instance.patient_test_id).values('id').exclude(name='regeneration_type')
-    analysises = Analysis.objects.filter(test_id__in=tests).values('id', 'indicator_id__name',
-                                                                   'value', 'indicator_id__unit',
-                                                                   'indicator_id__interval_min',
-                                                                   'indicator_id__interval_max')
+    tests = Test.objects.filter(patient_test_id=instance.patient_test_id).values("id").exclude(name="regeneration_type")
+    analysises = Analysis.objects.filter(test_id__in=tests).values("id", "indicator_id__name",
+                                                                   "value", "indicator_id__unit",
+                                                                   "indicator_id__interval_min",
+                                                                   "indicator_id__interval_max")
     return analysises_prev, analysises
 
 
 def get_analysis_comparison(data, analysises_prev, analysises, names_dict):
     if analysises_prev:
         for analysis in analysises:
-            name = analysis['indicator_id__name']
-            avg = analysises_prev.filter(indicator_id__name=name).aggregate(Avg('value'))[
-                'value__avg']
-            changes = (analysis['value'] - avg) / avg * 100
+            name = analysis["indicator_id__name"]
+            avg = analysises_prev.filter(indicator_id__name=name).aggregate(Avg("value"))[
+                "value__avg"]
+            changes = (analysis["value"] - avg) / avg * 100
             res = {
-                'name': names_dict[name],
-                'value': analysis['value'],
-                'avg_prev_value': round(avg, 2),
-                'interval_min': analysis['indicator_id__interval_min'],
-                'interval_max': analysis['indicator_id__interval_max'],
-                'unit': analysis['indicator_id__unit'],
-                'changes': round(changes, 2)
+                "name": names_dict[name],
+                "value": analysis["value"],
+                "avg_prev_value": round(avg, 2),
+                "interval_min": analysis["indicator_id__interval_min"],
+                "interval_max": analysis["indicator_id__interval_max"],
+                "unit": analysis["indicator_id__unit"],
+                "changes": round(changes, 2)
             }
-            data['analysis'].append(res)
+            data["analysis"].append(res)
     else:
         for analysis in analysises:
-            name = analysis['indicator_id__name']
+            name = analysis["indicator_id__name"]
             avg = None
             changes = None
             res = {
-                'name': names_dict[name],
-                'value': analysis['value'],
-                'avg_prev_value': avg,
-                'interval_min': analysis['indicator_id__interval_min'],
-                'interval_max': analysis['indicator_id__interval_max'],
-                'unit': analysis['indicator_id__unit'],
-                'changes': changes
+                "name": names_dict[name],
+                "value": analysis["value"],
+                "avg_prev_value": avg,
+                "interval_min": analysis["indicator_id__interval_min"],
+                "interval_max": analysis["indicator_id__interval_max"],
+                "unit": analysis["indicator_id__unit"],
+                "changes": changes
             }
-            data['analysis'].append(res)
+            data["analysis"].append(res)
 
     return data

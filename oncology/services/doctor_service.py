@@ -6,8 +6,8 @@ def get_doctor_by_email(email):
 
 
 def set_doctor_password(request):
-    user = get_doctor_by_email(request.data['email'])
-    user.set_password(request.data['password'])
+    user = get_doctor_by_email(request.data["email"])
+    user.set_password(request.data["password"])
     user.is_active = True
     user.save()
 

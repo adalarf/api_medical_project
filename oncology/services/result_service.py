@@ -23,8 +23,8 @@ def get_analysis_result(tests: Test, values, min_values, max_values):
 def save_conclusion_and_recommendations(instance, type_name, request_data):
     tests = get_tests_by_patient_id_and_name(instance, type_name)
     for test in tests:
-        test.recommendations = request_data['recommendations']
-        test.conclusion = request_data['conclusion']
+        test.recommendations = request_data["recommendations"]
+        test.conclusion = request_data["conclusion"]
         test.save()
 
 

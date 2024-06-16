@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from datetime import date
 
 
 class CustomManager(BaseUserManager):
@@ -19,14 +18,14 @@ class CustomManager(BaseUserManager):
         return doctor
 
     def create_superuser(self, first_name,  last_name, patronymic, password, email, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
 
-        if not extra_fields.get('is_staff'):
+        if not extra_fields.get("is_staff"):
             raise ValueError("Superuser must have is_staff = True")
 
-        if not extra_fields.get('is_superuser'):
+        if not extra_fields.get("is_superuser"):
             raise ValueError("Superuser must have is_superuser = True")
         return self.create_user(first_name,  last_name, patronymic, password, email, **extra_fields)
 
@@ -43,8 +42,8 @@ class Doctor(AbstractBaseUser):
 
     objects = CustomManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'patronymic']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["first_name", "last_name", "patronymic"]
 
     def __str__(self):
         return self.email
@@ -60,6 +59,7 @@ def validate_date(value):
     if value > timezone.now().date():
         raise ValidationError("Дата рождения не может быть больше текущей даты")
 
+
 class Patient(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
@@ -72,11 +72,10 @@ class Patient(models.Model):
     diagnosis_comment = models.TextField(null=True, blank=True)
     operation_comment = models.TextField(null=True, blank=True)
     chemoterapy_comment = models.TextField(null=True, blank=True)
-    # patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT, null=True, blank=True)
+
 
 class PatientTests(models.Model):
     analysis_date = models.DateField()
-    # test_id = models.ForeignKey('Test', on_delete=models.PROTECT, null=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
     doctor_id = models.ForeignKey(Doctor, on_delete=models.PROTECT)
@@ -84,17 +83,16 @@ class PatientTests(models.Model):
 
 
 class Test(models.Model):
-    # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT, null=True)
     name = models.CharField(max_length=255)
     conclusion = models.TextField(null=True, blank=True)
     recommendations = models.TextField(null=True, blank=True)
-    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
+    patient_test_id = models.ForeignKey("PatientTests", on_delete=models.PROTECT)
 
 
 class Analysis(models.Model):
     value = models.DecimalField(max_digits=5, decimal_places=2)
-    indicator_id = models.ForeignKey('Indicator', on_delete=models.PROTECT)
-    test_id = models.ForeignKey('Test', on_delete=models.PROTECT)
+    indicator_id = models.ForeignKey("Indicator", on_delete=models.PROTECT)
+    test_id = models.ForeignKey("Test", on_delete=models.PROTECT)
 
 
 class Indicator(models.Model):
@@ -102,7 +100,6 @@ class Indicator(models.Model):
     interval_min = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     interval_max = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     unit = models.CharField(max_length=255, blank=True, null=True)
-    # analysis_id = models.ForeignKey('Analysis', on_delete=models.PROTECT)
 
 
 class SubjectInfo(models.Model):
@@ -115,5 +112,5 @@ class CopyrightInfo(models.Model):
 
 
 class Graphic(models.Model):
-    graphic = models.ImageField(upload_to='media')
-    patient_test_id = models.ForeignKey('PatientTests', on_delete=models.PROTECT)
+    graphic = models.ImageField(upload_to="media")
+    patient_test_id = models.ForeignKey("PatientTests", on_delete=models.PROTECT)

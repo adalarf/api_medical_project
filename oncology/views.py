@@ -34,8 +34,8 @@ class DoctorSignupView(GenericAPIView):
             user = set_doctor_password(request)
             token = create_token(user)
             return Response({
-                'token': token.key,
-                'user': user.id,
+                "token": token.key,
+                "user": user.id,
             })
         return Response(serializer.errors)
 
@@ -46,19 +46,19 @@ class DoctorLoginView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            password = serializer.validated_data.get('password')
+            email = serializer.validated_data.get("email")
+            password = serializer.validated_data.get("password")
 
             try:
                 user = get_doctor_by_email(email)
             except Doctor.DoesNotExist:
-                return Response({'error': 'Неверный логин или пароль'})
+                return Response({"error": "Неверный логин или пароль"})
 
             if not user.check_password(password):
-                return Response({'error': 'Неверный логин или пароль'})
+                return Response({"error": "Неверный логин или пароль"})
 
             token, created = get_or_create_token(user)
-            return Response({'token': token.key, 'user': user.email})
+            return Response({"token": token.key, "user": user.email})
 
         return Response(serializer.errors)
 
@@ -67,7 +67,7 @@ class LogoutView(APIView):
 
     def post(self, request, format=None):
         request.auth.delete()
-        return Response('Вы вышли из аккаунта')
+        return Response("Вы вышли из аккаунта")
 
 
 class DoctorProfileView(RetrieveUpdateDestroyAPIView):
@@ -114,7 +114,7 @@ class SubjectInfoView(RetrieveUpdateDestroyAPIView):
     serializer_class = SubjectInfoSerializer
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == "GET":
             return []
         else:
             return [IsAuthenticated()]
@@ -137,13 +137,13 @@ class CopyrightInfoView(RetrieveUpdateDestroyAPIView):
     serializer_class = CopyrightInfoSerializer
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == "GET":
             return []
         else:
             return [IsAuthenticated()]
 
     def retrieve(self, request, *args, **kwargs):
-        instance = get_copyright_info(kwargs['pk'])
+        instance = get_copyright_info(kwargs["pk"])
         serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
@@ -246,39 +246,39 @@ class PatientTestsView(APIView):
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['analysis_date', 'test', 'patient_id'],
+        required=["analysis_date", "test", "patient_id"],
         properties={
-            'analysis_date': openapi.Schema(type=openapi.TYPE_STRING),
-            'test': openapi.Schema(
+            "analysis_date": openapi.Schema(type=openapi.TYPE_STRING),
+            "test": openapi.Schema(
                 type=openapi.TYPE_ARRAY,
                 items=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'name': openapi.Schema(type=openapi.TYPE_STRING),
-                        'analysis': openapi.Schema(
+                        "name": openapi.Schema(type=openapi.TYPE_STRING),
+                        "analysis": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(
                                 type=openapi.TYPE_OBJECT,
                                 properties={
-                                    'value': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'indicator_name': openapi.Schema(type=openapi.TYPE_STRING)
+                                    "value": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "indicator_name": openapi.Schema(type=openapi.TYPE_STRING)
                                 }
                             )
                         )
                     }
                 )
             ),
-            'patient_id': openapi.Schema(type=openapi.TYPE_INTEGER)
+            "patient_id": openapi.Schema(type=openapi.TYPE_INTEGER)
         }
     ))
     def post(self, request):
-        analysis_date = request.data['analysis_date']
+        analysis_date = request.data["analysis_date"]
         doctor_id = request.user
         current_time = datetime.now()
         created_at = current_time
         updated_at = current_time
-        tests = request.data['test']
-        patient = request.data['patient_id']
+        tests = request.data["test"]
+        patient = request.data["patient_id"]
 
         patient_test = create_tests_and_analysises(patient, doctor_id, created_at, updated_at, analysis_date, tests)
 
@@ -288,7 +288,7 @@ class PatientTestsView(APIView):
         draw_graphics_and_make_results(patient_test, regeneration_type_tests, hematological_research_tests,
                                        immune_status_tests, cytokine_status_tests)
 
-        return Response(f'Анализ с id {patient_test.id} создан')
+        return Response(f"Анализ с id {patient_test.id} создан")
 
 
 class PatientTestsEditView(APIView):
@@ -300,22 +300,22 @@ class PatientTestsEditView(APIView):
 
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['analysis_date', 'test'],
+        required=["analysis_date", "test"],
         properties={
-            'analysis_date': openapi.Schema(type=openapi.TYPE_STRING),
-            'test': openapi.Schema(
+            "analysis_date": openapi.Schema(type=openapi.TYPE_STRING),
+            "test": openapi.Schema(
                 type=openapi.TYPE_ARRAY,
                 items=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'name': openapi.Schema(type=openapi.TYPE_STRING),
-                        'analysis': openapi.Schema(
+                        "name": openapi.Schema(type=openapi.TYPE_STRING),
+                        "analysis": openapi.Schema(
                             type=openapi.TYPE_ARRAY,
                             items=openapi.Schema(
                                 type=openapi.TYPE_OBJECT,
                                 properties={
-                                    'value': openapi.Schema(type=openapi.TYPE_STRING),
-                                    'indicator_name': openapi.Schema(type=openapi.TYPE_STRING)
+                                    "value": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "indicator_name": openapi.Schema(type=openapi.TYPE_STRING)
                                 }
                             )
                         )
@@ -325,15 +325,15 @@ class PatientTestsEditView(APIView):
         }
     ))
     def put(self, request, pk):
-        analysis_date = request.data['analysis_date']
+        analysis_date = request.data["analysis_date"]
         doctor_id = request.user
         current_time = datetime.now()
         updated_at = current_time
-        tests = request.data['test']
+        tests = request.data["test"]
 
         update_tests_and_analysises(pk, doctor_id, updated_at, analysis_date, tests)
 
-        return Response('Анализ изменён')
+        return Response("Анализ изменён")
 
 
 class PatientAnalysisView(RetrieveAPIView):
@@ -361,18 +361,18 @@ class PatientAnalysisView(RetrieveAPIView):
         serializer = self.get_serializer(instance)
         data = serializer.data
         patient_test = get_patient_tests_by_id(instance.patient_test_id.id)
-        data['analysis_date'] = patient_test.analysis_date
+        data["analysis_date"] = patient_test.analysis_date
         analysises = get_analysises_by_test_id(instance)
-        data['analysis'] = []
+        data["analysis"] = []
         for analysis in analysises:
             analysis_data = {
-                'name': get_names_dict()[analysis.indicator_id.name],
-                'value': analysis.value,
-                'interval_min': analysis.indicator_id.interval_min,
-                'interval_max': analysis.indicator_id.interval_max,
-                'unit': analysis.indicator_id.unit
+                "name": get_names_dict()[analysis.indicator_id.name],
+                "value": analysis.value,
+                "interval_min": analysis.indicator_id.interval_min,
+                "interval_max": analysis.indicator_id.interval_max,
+                "unit": analysis.indicator_id.unit
             }
-            data['analysis'].append(analysis_data)
+            data["analysis"].append(analysis_data)
 
         return Response(data)
 
@@ -482,7 +482,7 @@ class AnalysisComparisonView(RetrieveAPIView):
         patient_test = get_patient_tests_by_id(instance.patient_test_id.id)
         patient_test_date = patient_test.analysis_date
         analysises_prev, analysises = get_analysises_and_analysis_prev_by_test_id(instance, patient_test_date)
-        data['analysis'] = []
+        data["analysis"] = []
 
         data = get_analysis_comparison(data, analysises_prev, analysises, get_names_dict())
         return Response(data)
@@ -505,20 +505,20 @@ class SearchPatientView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.data
-        first_name = data.get('first_name', '')
-        last_name = data.get('last_name', '')
-        patronymic = data.get('patronymic', '')
-        birth_date = data.get('birth_date', '')
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+        patronymic = data.get("patronymic", "")
+        birth_date = data.get("birth_date", "")
 
         patients = search_patients(first_name, last_name, patronymic, birth_date)
         if not patients:
-            return Response([{'error': 'Пациент с такими данными не найден'}])
+            return Response([{"error": "Пациент с такими данными не найден"}])
 
-        data = [{'id': patient['id'],
-                 'first_name': patient['first_name'],
-                 'last_name': patient['last_name'],
-                 'patronymic': patient['patronymic'],
-                 'birth_date': patient['birth_date']} for patient in patients]
+        data = [{"id": patient["id"],
+                 "first_name": patient["first_name"],
+                 "last_name": patient["last_name"],
+                 "patronymic": patient["patronymic"],
+                 "birth_date": patient["birth_date"]} for patient in patients]
 
         return Response(data)
 
@@ -544,48 +544,48 @@ class GraphicView(RetrieveAPIView):
 
 def get_names_dict():
     names_dict = {
-        'leukocytes': 'лейкоциты',
-        'lymphocytes': 'лимфоциты',
-        'monocytes': 'моноциты',
-        'neutrophils': 'нейтрофилы',
-        'eosinophils': 'эозинофилы',
-        'basophils': 'базофилы',
-        'hemoglobin': 'гемоглобин',
-        'hematocrit': 'гематокрит',
-        'platelets': 'тромбоциты',
-        'erythrocytes': 'эритроциты',
-        'avg_erythrocyte_volume': 'ср.объем эритроциты',
-        'avg_hem_cont_in_eryth': 'ср.сод.гем. в эритроциты',
-        'avg_hem_conc_in_eryth': 'ср.конц.гем в эритроциты',
-        'eryth_volume_distr': 'распр.эритр. по объему',
-        'ave_platelet_volume': 'ср.объем эритроцита',
-        'thrombocrit': 'тромбокрит',
-        'thromb_volume_distr': 'распр.тромб. по объему',
-        'b_lymphocytes': 'б-лимфоциты',
-        't_cytotoxic_lymphocytes': 'т-цитоксические лимфоциты',
-        't_lymphocytes': 'т-лимфоциты',
-        't_helpers': 'т-хелперы',
-        'nk_cells': 'nk-клетки',
-        'tnk': 'тнк',
-        'active_t_lymphocytes': 'активные т-лимфоциты',
-        'igA': 'igA',
-        'igG': 'igG',
-        'igM': 'igM',
-        'circulating_immune_complexes': 'циркулирующие имунные комплексы',
-        'nst_test_spontaneous': 'нст-тест (спонтанный)',
-        'nst_test_stimulated': 'нст-тест (стимулированный)',
-        'leukotytes_bactericidal_activity': 'бактерицидная активность лейкоцитов',
-        'neutrophils_absorption_activity': 'поглотительная активность нейтрофилов',
-        'monocytes_absorption_activity': 'поглотительная активность моноцитов',
-        'cd3_ifny_stimulated': 'cd3+ifny+(стимулированный)',
-        'cd3_ifny_spontaneous': 'cd3+ifny+(спонтанный)',
-        'cd3_tnfa_stimulated': 'cd3+tnfa+(стимулированный)',
-        'cd3_tnfa_spontaneous': 'cd3+tnfa+(спонтанный)',
-        'cd3_il2_stimulated': 'cd3+il2+(стимулированный)',
-        'cd3_il2_spontaneous': 'cd3+il2+(спонтанный)',
-        'cd3_il4_stimulated': 'cd3+il4+(стимулированный)',
-        'cd3_il4_spontaneous': 'cd3+il4+(спонтанный)',
-        'cd3_negative_ifny_stimulated': 'cd3-ifny+(стимулированный)',
-        'cd3_negative_ifny_spontaneous': 'cd3-ifny+(спонтанный)',
+        "leukocytes": "лейкоциты",
+        "lymphocytes": "лимфоциты",
+        "monocytes": "моноциты",
+        "neutrophils": "нейтрофилы",
+        "eosinophils": "эозинофилы",
+        "basophils": "базофилы",
+        "hemoglobin": "гемоглобин",
+        "hematocrit": "гематокрит",
+        "platelets": "тромбоциты",
+        "erythrocytes": "эритроциты",
+        "avg_erythrocyte_volume": "ср.объем эритроциты",
+        "avg_hem_cont_in_eryth": "ср.сод.гем. в эритроциты",
+        "avg_hem_conc_in_eryth": "ср.конц.гем в эритроциты",
+        "eryth_volume_distr": "распр.эритр. по объему",
+        "ave_platelet_volume": "ср.объем эритроцита",
+        "thrombocrit": "тромбокрит",
+        "thromb_volume_distr": "распр.тромб. по объему",
+        "b_lymphocytes": "б-лимфоциты",
+        "t_cytotoxic_lymphocytes": "т-цитоксические лимфоциты",
+        "t_lymphocytes": "т-лимфоциты",
+        "t_helpers": "т-хелперы",
+        "nk_cells": "nk-клетки",
+        "tnk": "тнк",
+        "active_t_lymphocytes": "активные т-лимфоциты",
+        "igA": "igA",
+        "igG": "igG",
+        "igM": "igM",
+        "circulating_immune_complexes": "циркулирующие имунные комплексы",
+        "nst_test_spontaneous": "нст-тест (спонтанный)",
+        "nst_test_stimulated": "нст-тест (стимулированный)",
+        "leukotytes_bactericidal_activity": "бактерицидная активность лейкоцитов",
+        "neutrophils_absorption_activity": "поглотительная активность нейтрофилов",
+        "monocytes_absorption_activity": "поглотительная активность моноцитов",
+        "cd3_ifny_stimulated": "cd3+ifny+(стимулированный)",
+        "cd3_ifny_spontaneous": "cd3+ifny+(спонтанный)",
+        "cd3_tnfa_stimulated": "cd3+tnfa+(стимулированный)",
+        "cd3_tnfa_spontaneous": "cd3+tnfa+(спонтанный)",
+        "cd3_il2_stimulated": "cd3+il2+(стимулированный)",
+        "cd3_il2_spontaneous": "cd3+il2+(спонтанный)",
+        "cd3_il4_stimulated": "cd3+il4+(стимулированный)",
+        "cd3_il4_spontaneous": "cd3+il4+(спонтанный)",
+        "cd3_negative_ifny_stimulated": "cd3-ifny+(стимулированный)",
+        "cd3_negative_ifny_spontaneous": "cd3-ifny+(спонтанный)",
     }
     return names_dict

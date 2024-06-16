@@ -5,51 +5,51 @@ from .models import Doctor, SubjectInfo, CopyrightInfo, Patient, Test, Indicator
 class DoctorSignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('first_name', 'last_name', 'patronymic', 'password', 'email')
+        fields = ("first_name", "last_name", "patronymic", "password", "email")
 
 
 class DoctorLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('email', 'password')
+        fields = ("email", "password")
         extra_kwargs = {
-            'email': {'validators': []}}
+            "email": {"validators": []}}
 
 
 class BaseDoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
-        fields = ('first_name', 'last_name', 'patronymic', 'email')
+        fields = ("first_name", "last_name", "patronymic", "email")
 
 
 class SubjectInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubjectInfo
-        fields = ('subject_name', 'subject_text')
+        fields = ("subject_name", "subject_text")
 
 
 class SubjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubjectInfo
-        fields = ('id', 'subject_name', )
+        fields = ("id", "subject_name", )
 
 
 class CopyrightInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CopyrightInfo
-        fields = ('copyright_text',)
+        fields = ("copyright_text",)
 
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        exclude = ('diagnosis_date', 'chemoterapy',)
+        exclude = ("diagnosis_date", "chemoterapy",)
 
 
 class PatientInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ('id', 'first_name', 'last_name', 'patronymic', 'birth_date',)
+        fields = ("id", "first_name", "last_name", "patronymic", "birth_date",)
 
 
 class PatientOperationSerializer(serializers.ModelSerializer):
@@ -62,14 +62,14 @@ class PatientOperationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Patient
-        fields = ('diagnosis', 'diagnosis_comment', 'diagnosis_date',  'operation_comment', 'chemoterapy',
-                  'chemoterapy_comment')
+        fields = ("diagnosis", "diagnosis_comment", "diagnosis_date",  "operation_comment", "chemoterapy",
+                  "chemoterapy_comment")
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
-        exclude = ('id',)
+        exclude = ("id",)
 
     def create(self, validated_data):
         return Indicator.objects.create(**validated_data)
@@ -78,7 +78,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
 class TestNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Test
-        fields = ('name',)
+        fields = ("name",)
 
 
 class ConclusionSerializer(serializers.ModelSerializer):
@@ -87,7 +87,7 @@ class ConclusionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Test
-        fields = ('conclusion', 'recommendations',)
+        fields = ("conclusion", "recommendations",)
 
 
 class ChangeRefsSerializer(serializers.Serializer):
@@ -106,20 +106,20 @@ class SearchPatientSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_blank=True)
     patronymic = serializers.CharField(required=False, allow_blank=True)
-    birth_date = serializers.DateField(required=False, allow_null=True, default='', input_formats=['%Y-%m-%d', ''])
+    birth_date = serializers.DateField(required=False, allow_null=True, default="", input_formats=["%Y-%m-%d", ""])
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        if ret['birth_date'] == '1900-01-01':
-            ret['birth_date'] = ''
+        if ret["birth_date"] == "1900-01-01":
+            ret["birth_date"] = ""
         return ret
 
     class Meta:
         model = Patient
-        fields = ('first_name', 'last_name', 'patronymic', 'birth_date',)
+        fields = ("first_name", "last_name", "patronymic", "birth_date",)
 
 
 class GraphicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Graphic
-        fields = ('graphic',)
+        fields = ("graphic",)
